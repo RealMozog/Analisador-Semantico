@@ -1,9 +1,12 @@
-package br.uefs.ecomp.analisadorSintatico.view;
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package br.uefs.ecomp.analisadorSemantico.model;
 
 import br.uefs.ecomp.AnalisadorLexico.model.Token;
-import br.uefs.ecomp.analisadorSintatico.model.Error;
-import br.uefs.ecomp.analisadorSintatico.controller.AnalisadorSintaticoController;
-import br.uefs.ecomp.analisadorSintatico.model.AnaliseLexica;
+import br.uefs.ecomp.analisadorSemantico.controller.AnalisadorSemanticoController;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -13,17 +16,13 @@ import java.util.List;
 
 /**
  *
- * @author Alessandro Costa
+ * @author sandr
  */
-public class AnalisadorSintático {
-
-    /**
-     * @param args the command line arguments
-     * @throws java.lang.Exception
-     */
-    public static void main(String[] args) throws Exception {
+public class AnaliseSintatica {
+    
+    public AnaliseSintatica() throws IOException{
         AnaliseLexica al = new AnaliseLexica();        
-        AnalisadorSintaticoController controller = new AnalisadorSintaticoController();
+        AnalisadorSemanticoController controller = new AnalisadorSemanticoController();
         Iterator<Token> it; 
         Iterator<Error> e;
         String output = "";
@@ -49,9 +48,9 @@ public class AnalisadorSintático {
         }
     }
     
-    public static void write_output(String erros, int count) throws IOException{
+    private void write_output(String erros, int count) throws IOException{
         
-        Path path = Paths.get("output\\saida" + count + ".txt");
+        Path path = Paths.get("output-sintatico\\saida" + count + ".txt");
         
         byte[] strToBytes = erros.getBytes();
         

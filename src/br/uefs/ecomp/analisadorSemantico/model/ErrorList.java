@@ -1,4 +1,4 @@
-package br.uefs.ecomp.analisadorSintatico.model;
+package br.uefs.ecomp.analisadorSemantico.model;
 
 import java.util.ArrayList;
 import java.util.Iterator;

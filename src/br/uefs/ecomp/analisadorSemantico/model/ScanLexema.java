@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package br.uefs.ecomp.analisadorSintatico.model;
+package br.uefs.ecomp.analisadorSemantico.model;
 
 import java.util.Arrays;
 import java.util.List;

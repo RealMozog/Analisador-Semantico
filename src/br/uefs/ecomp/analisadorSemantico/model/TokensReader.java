@@ -1,4 +1,4 @@
-package br.uefs.ecomp.analisadorSintatico.model;
+package br.uefs.ecomp.analisadorSemantico.model;
 
 import br.uefs.ecomp.AnalisadorLexico.model.Token;
 import java.util.Iterator;

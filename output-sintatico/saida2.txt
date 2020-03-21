@@ -1,0 +1,3 @@
+Error: line= 14; Expected=Identifier", Found=";"
+Error: line= 29; Expected=number, boolean", Found="=="
+Error: line= 30; Expected=Variable", Found=";"

@@ -3,19 +3,19 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package br.uefs.ecomp.analisadorSintatico.controller;
+package br.uefs.ecomp.analisadorSemantico.controller;
 
 import br.uefs.ecomp.AnalisadorLexico.model.Token;
-import br.uefs.ecomp.analisadorSintatico.model.ErrorList;
-import br.uefs.ecomp.analisadorSintatico.model.TokensReader;
-import br.uefs.ecomp.analisadorSintatico.model.Error;
+import br.uefs.ecomp.analisadorSemantico.model.ErrorList;
+import br.uefs.ecomp.analisadorSemantico.model.TokensReader;
+import br.uefs.ecomp.analisadorSemantico.model.Error;
 import java.util.Iterator;
 
 /**
  *
  * @author Alessandro Costa
  */
-public class AnalisadorSintaticoController {
+public class AnalisadorSemanticoController {
     TokensReader tr;
     ErrorList list;
     
