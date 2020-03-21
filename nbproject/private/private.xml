@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-private xmlns="http://www.netbeans.org/ns/project-private/1">
+    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
+    <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
+        <group>
+            <file>file:/C:/Users/sandr/Downloads/Analisador-Sintatico/src/br/uefs/ecomp/analisadorSintatico/model/AnaliseLexica.java</file>
+            <file>file:/C:/Users/sandr/Downloads/Analisador-Sintatico/src/br/uefs/ecomp/analisadorSintatico/view/AnalisadorSintático.java</file>
+            <file>file:/C:/Users/sandr/Downloads/Analisador-Sintatico/src/br/uefs/ecomp/analisadorSintatico/model/ErrorList.java</file>
+            <file>file:/C:/Users/sandr/Downloads/Analisador-Sintatico/src/br/uefs/ecomp/analisadorSintatico/model/TokensReader.java</file>
+            <file>file:/C:/Users/sandr/Downloads/Analisador-Sintatico/src/br/uefs/ecomp/analisadorSintatico/model/ScanLexema.java</file>
+            <file>file:/C:/Users/sandr/Downloads/Analisador-Sintatico/src/br/uefs/ecomp/analisadorSintatico/model/Error.java</file>
+            <file>file:/C:/Users/sandr/Downloads/Analisador-Sintatico/nbproject/build-impl.xml</file>
+            <file>file:/C:/Users/sandr/Downloads/Analisador-Sintatico/src/br/uefs/ecomp/analisadorSintatico/controller/AnalisadorSintaticoController.java</file>
+        </group>
+    </open-files>
+</project-private>
