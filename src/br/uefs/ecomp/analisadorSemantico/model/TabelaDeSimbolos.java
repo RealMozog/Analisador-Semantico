@@ -15,30 +15,86 @@ import java.util.List;
  */
 public class TabelaDeSimbolos {
     private List<List<Simbolo>> tabela;
+    private int tamanho = 0;
     
     public TabelaDeSimbolos(){
-        this.tabela = new ArrayList<LinkedList<Simbolo>>();
-    }
-    
-    public boolean addElement(Simbolo symbol){
-        boolean c = this.tabela.contains(symbol);
-        
-        if(!c){
-            this.tabela.add(symbol);
+        this.tabela = new ArrayList<>();
+        for (int i = 0; i < 26; i++) {
+            LinkedList<Simbolo> lista = new LinkedList<>();
+            this.tabela.add(lista);
         }
-        
-        return c;
     }
     
-    public boolean contains (String id){
-        
+     public void addElement(Simbolo symbol) {
+        if(!this.contem(symbol)) {
+            this.verificaCarga();
+            int indice = this.calculaIndiceDaTabela(symbol);
+            List<Simbolo> lista = this.tabela.get(indice);
+            lista.add(symbol);
+            this.tamanho++;
+        }
+      }
+    
+    public void removeElement(Simbolo symbol){
+        if(!this.contem(symbol)){
+            int indice = this.calculaIndiceDaTabela(symbol);
+            List<Simbolo> lista = this.tabela.get(indice);
+            lista.remove(symbol);
+            this.tamanho--;
+            this.verificaCarga();
+        }
+    }
+    
+    private int calculaIndiceDaTabela(Simbolo symbol) {
+        int codigoDeEspalhamento = symbol.hashCode();
+        codigoDeEspalhamento = Math.abs(codigoDeEspalhamento);
+        return codigoDeEspalhamento % tabela.size();
+    }
+    
+    public int tamanho() {
+        return this.tamanho;
+    }
+    
+    public boolean contem(Simbolo symbol) {
+        int indice = this.calculaIndiceDaTabela(symbol);
+        List<Simbolo> lista = this.tabela.get(indice);
+
+        return lista.contains(symbol);
     }
     
     public void updateValue(String lexema, String value){
         
     }
     
-    public Object[] lista(){
-           return this.tabela.toArray();
+    private void redimensionaTabela(int novaCapacidade){
+        List<Simbolo> simbolos = this.pegaTodos();
+        this.tabela.clear();
+
+        for (int i = 0; i < novaCapacidade; i++) {
+            this.tabela.add(new LinkedList<>());
+        }
+
+        for (Simbolo symbol : simbolos) {
+            this.addElement(symbol);
+        }
     }
+    
+    private void verificaCarga() {
+        int capacidade = this.tabela.size();
+        double carga = (double) this.tamanho / capacidade;
+
+        if (carga > 0.75) {
+            this.redimensionaTabela(capacidade * 2);
+        } else if (carga < 0.25) {
+            this.redimensionaTabela(Math.max(capacidade / 2, 10));
+        }
+    }
+    
+    public List<Simbolo> pegaTodos() {
+        List<Simbolo> simbolos = new ArrayList<>();
+        for (List<Simbolo> tabela1 : this.tabela) {
+            simbolos.addAll(tabela1);
+        }
+        return simbolos;
+      }
 }

@@ -161,5 +161,33 @@ public class Simbolo {
         return "Simbolo{" + "id=" + id + ", line=" + line + ", scope=" + scope + ", category=" + category + ", type=" + type + ", read=" + read + ", value=" + value + ", parameters=" + parameters + '}';
     }
 
-    
+    @Override
+    public int hashCode() {
+        int hash = 5;
+        hash = 79 * hash + Objects.hashCode(this.id);
+        hash = 79 * hash + Objects.hashCode(this.scope);
+        hash = 79 * hash + Objects.hashCode(this.parameters);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final Simbolo other = (Simbolo) obj;
+        if (!Objects.equals(this.id, other.id)) {
+            return false;
+        }
+        if (!Objects.equals(this.scope, other.scope)) {
+            return false;
+        }
+        if (!Objects.equals(this.parameters, other.parameters)) {
+            return false;
+        }
+        return true;
+    }
 }
