@@ -9,6 +9,7 @@ import br.uefs.ecomp.AnalisadorLexico.model.Token;
 import br.uefs.ecomp.analisadorSemantico.model.ErrorList;
 import br.uefs.ecomp.analisadorSemantico.model.TokensReader;
 import br.uefs.ecomp.analisadorSemantico.model.Error;
+import br.uefs.ecomp.analisadorSemantico.model.TabelaDeSimbolos;
 import java.util.Iterator;
 
 /**
