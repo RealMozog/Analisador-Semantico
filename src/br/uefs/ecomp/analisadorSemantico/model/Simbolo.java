@@ -16,12 +16,12 @@ public class Simbolo {
     private String id;
     private String extends_id;
     private int line;
-    private int array_lenght;
+    private int array_dimensions = 0;
+    private int array_lenght = 1;
     private String scope;
     private String category;
     private String type;
     private String struct_id;
-    private boolean isArray = false; 
     private boolean read;
     private String value;
     final private ArrayList<Param> parameters;
@@ -62,14 +62,6 @@ public class Simbolo {
         this.parameters.add(p);
     }
 
-    public boolean isIsArray() {
-        return isArray;
-    }
-
-    public void setIsArray(boolean isArray) {
-        this.isArray = isArray;
-    }
-
     public String getExtends_id() {
         return extends_id;
     }
@@ -78,12 +70,12 @@ public class Simbolo {
         this.extends_id = extends_id;
     }
 
-    public int getArray_lenght() {
-        return array_lenght;
+    public int getArray_dimensions() {
+        return array_dimensions;
     }
 
-    public void setArray_lenght(int array_lenght) {
-        this.array_lenght = array_lenght;
+    public void setArray_dimensions() {
+        this.array_dimensions++;
     }
 
     public String getStruct_id() {
@@ -154,9 +146,17 @@ public class Simbolo {
         this.value = value;
     }
 
+    public int getArray_lenght() {
+        return array_lenght;
+    }
+
+    public void setArray_lenght(int array_lenght) {
+        this.array_lenght *= array_lenght;
+    }
+
     @Override
     public String toString() {
-        return "Simbolo{" + "id=" + id + ", extends_id=" + extends_id + ", line=" + line + ", array_lenght=" + array_lenght + ", scope=" + scope + ", category=" + category + ", type=" + type + ", struct_id=" + struct_id + ", isArray=" + isArray + ", read=" + read + ", value=" + value + ", parameters=" + parameters + '}';
+        return "Simbolo{" + "id=" + id + ", extends_id=" + extends_id + ", line=" + line + ", array_dimensions=" + array_dimensions + ", array_lenght=" + array_lenght + ", scope=" + scope + ", category=" + category + ", type=" + type + ", struct_id=" + struct_id + ", read=" + read + ", value=" + value + ", parameters=" + parameters + '}';
     }
 
     @Override

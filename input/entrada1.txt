@@ -1,12 +1,16 @@
 const {
-    int a = 4;
+    int a = 4.5;
     boolean aux1 = true;
     real numeroAux = 4.478;
     string auxString = "Testando";
 } 
 var {
-    int auxNum[], testeNum, next, next;
+    int auxNum[2][10], testeNum, next, next;
     string auxString;
+	struct istruct {
+	var {
+	int varia;
+}
 }
 
 function int starti (){

@@ -10,6 +10,7 @@ import java.util.Iterator;
 public class TokensReader {
     Iterator<Token> arq;
     ErrorList erroList;
+    AnaliseSemantica semantics;
     TabelaDeSimbolos tabela_variables;
     TabelaDeSimbolos tabela_constants;
     TabelaDeSimbolos tabela_local_varibles;
@@ -35,6 +36,7 @@ public class TokensReader {
         scan = new ScanLexema();
         this.erroList = new ErrorList();
         this.token = this.arq.next();
+        this.semantics = new AnaliseSemantica();
         this.tabela_variables = new TabelaDeSimbolos();
         this.tabela_local_varibles = new TabelaDeSimbolos();
         this.tabela_constants = new TabelaDeSimbolos();
@@ -56,6 +58,10 @@ public class TokensReader {
             }
             
             for (Object lista : this.tabela_local_varibles.pegaTodos()) {
+                System.out.print(lista.toString() + "\n");
+            }
+            
+            for (Object lista : this.tabela_constants.pegaTodos()) {
                 System.out.print(lista.toString() + "\n");
             }
             stateZero();
@@ -127,7 +133,9 @@ public class TokensReader {
                 next();
             } 
 
-            const_values_declaration();
+            Simbolo const_s = new Simbolo();
+            const_s.setScope(scope);
+            const_values_declaration(scope, const_s);
             
             if(this.token.getLexema().equals("}")){
                 next();
@@ -140,7 +148,7 @@ public class TokensReader {
                 next();
             }
             
-            const_values_declaration();
+            const_values_declaration(scope, symbol);
             
             if(this.token.getLexema().equals("}")){
                 next();
@@ -154,7 +162,9 @@ public class TokensReader {
                 next();
             } 
 
-            var_values_declaration(scope, symbol);
+            Simbolo var_s = new Simbolo();
+            var_s.setScope(scope);
+            var_values_declaration(scope, var_s);
             
             if(this.token.getLexema().equals("}")){
                 next();
@@ -163,7 +173,6 @@ public class TokensReader {
     }
     
     private void var_values_declaration(String scope, Simbolo symbol){
-        System.out.print(scope);
         symbol.setCategory(category.VARIABLE.toString());
 
         if(scan.isType(this.token.getLexema())){
@@ -287,11 +296,14 @@ public class TokensReader {
     private void array_verification(Simbolo symbol){
         
         if(this.token.getLexema().equals("[")){
-            symbol.setIsArray(true);
+            symbol.setArray_dimensions();
             next();
             if(this.token.getCodigo().equals("NRO")){
-                
-                // symbol.setArray_lenght(Integer.parseInt(this.token.getLexema()));
+                if(this.semantics.checkTypes("int", this.token)){
+                    symbol.setArray_lenght(Integer.parseInt(this.token.getLexema()));
+                } else {
+                    System.out.print("Valor invalido declaração de array");
+                }
                 next();
             } 
             
@@ -307,22 +319,14 @@ public class TokensReader {
                 if(!this.tabela_variables.contem(symbol)){
                     this.tabela_variables.addElement(symbol);
                 } else {
-                    System.out.print("Variavel já declarada!" + "\n" + symbol.toString() + "\n");
+                    System.out.print("Variavel já declarada!");
                 }
             } else {
                 if(!this.tabela_local_varibles.contem(symbol)){
                     this.tabela_local_varibles.addElement(symbol);
                 } else {
-                    System.out.print("Variavel já declarada!" + "\n" + symbol.toString() + "\n");
+                    System.out.print("Variavel já declarada!");
                 }
-            }
-        }
-        
-        if(symbol.getCategory().equals("CONSTANT")){
-            if(!this.tabela_constants.contem(symbol)){
-                this.tabela_constants.addElement(symbol);
-            } else {
-                System.out.print("Constante já declarada!" + "\n" + symbol.toString() + "\n");
             }
         }
     }
@@ -345,23 +349,36 @@ public class TokensReader {
         }
     }
     
-    private void const_values_declaration(){
+    private void const_values_declaration(String scope, Simbolo symbol){
+        symbol.setCategory(category.CONSTANT.toString());
+        symbol.setScope(scope);
         
         if(scan.isType(this.token.getLexema())){
+            symbol.setType(this.token.getLexema());
             next();
-            const_values_atribuition();
-            const_more_atribuition();
+            const_values_atribuition(symbol);
+            
+            Simbolo more_const = new Simbolo();
+            more_const.setCategory(symbol.getCategory());
+            more_const.setScope(scope);
+            more_const.setType(symbol.getType());
+            
+            const_more_atribuition(more_const);
+            
             if(this.token.getLexema().equals(";")){
                 next();
             }
             
-            const_values_declaration();
+            Simbolo new_const = new Simbolo();
+            const_values_declaration(scope, new_const);
         } 
     }
     
-    private void const_values_atribuition(){
+    private void const_values_atribuition(Simbolo symbol){
         
         if(this.token.getCodigo().equals("IDE")){
+            symbol.setId(this.token.getLexema());
+            symbol.setLine(this.token.getLine());
             next();
         }
         
@@ -369,29 +386,51 @@ public class TokensReader {
             next();
         }
         
-        value_const();
+        value_const(symbol);
     }
     
-    private void value_const(){
+    private void value_const(Simbolo symbol){
         
         if(this.token.getCodigo().equals("NRO") || this.token.getCodigo().equals("CDC")
                 || scan.isBooleans(this.token.getLexema())){
+            if(this.semantics.checkTypes(symbol.getType(), this.token)){
+                symbol.setValue(this.token.getLexema());
+            } else {
+                System.out.print("Valores incompativeis" + this.token.getLexema() + symbol.getType() + "\n");
+            }
             next();
         } else 
             if(this.token.getLexema().equals("-")){
                 next();
                 if(this.token.getCodigo().equals("NRO")){
+                    if(!this.semantics.checkTypes(symbol.getType(), this.token)){
+                        symbol.setValue(this.token.getLexema());
+                    } else {
+                        System.out.print("Valores incompativeis" + this.token.getLexema() + symbol.getType() + "\n");
+                    }
                     next();
                 }
         }
+        
+        if(!this.tabela_constants.contem(symbol)){
+            this.tabela_constants.addElement(symbol);
+        } else {
+            System.out.print("Constante já declarada! " + symbol.toString() + "\n");
+        }
     }
     
-    private void const_more_atribuition(){
+    private void const_more_atribuition(Simbolo symbol){
         
         if(this.token.getLexema().equals(",")){
             next();
-            const_values_atribuition();
-            const_more_atribuition();
+            const_values_atribuition(symbol);
+            
+            Simbolo more_const = new Simbolo();
+            more_const.setCategory(symbol.getCategory());
+            more_const.setType(symbol.getType());
+            more_const.setScope(symbol.getScope());
+            
+            const_more_atribuition(more_const);
         }
     }
     
