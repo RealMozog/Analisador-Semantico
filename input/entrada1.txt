@@ -5,7 +5,7 @@ const {
     string auxString = "Testando";
 } 
 var {
-    int auxNum, testeNum, next;
+    int auxNum[], testeNum, next, next;
     string auxString;
 }
 

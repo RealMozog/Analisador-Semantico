@@ -22,6 +22,10 @@ public class TokensReader {
         GLOBAL, LOCAL, STRUCT;
     }
     
+    private enum types {
+        INT, REAL, BOOLEAN, STRING;
+    }
+    
     private enum category {
         FUNCTION, STRUCT, VARIABLE, CONSTANT
     }
@@ -47,8 +51,12 @@ public class TokensReader {
         if(this.arq.hasNext()){
             this.token = this.arq.next();
         } else {
-            for (Object lista : this.tabela_variables.lista()) {
-                System.out.print(lista.toString());
+            for (Object lista : this.tabela_variables.pegaTodos()) {
+                System.out.print(lista.toString() + "\n");
+            }
+            
+            for (Object lista : this.tabela_local_varibles.pegaTodos()) {
+                System.out.print(lista.toString() + "\n");
             }
             stateZero();
         }
@@ -97,6 +105,7 @@ public class TokensReader {
     
     private void global_values(String scope){
         Simbolo symbol = new Simbolo();
+        symbol.setScope(scope);
         
         if(this.token.getLexema().equals("var")){
             next();
@@ -154,27 +163,29 @@ public class TokensReader {
     }
     
     private void var_values_declaration(String scope, Simbolo symbol){
-        
-        if(symbol.getCategory() == null){
-            symbol.setCategory(category.VARIABLE.toString());
-        }
-        if(!scope.equals("STRUCT")){
-            symbol.setScope(scope);
-        }
+        System.out.print(scope);
+        symbol.setCategory(category.VARIABLE.toString());
 
         if(scan.isType(this.token.getLexema())){
-            if(scope.equals("STRUCT")){
-                Simbolo var_struct = new Simbolo();
-            }
             symbol.setType(this.token.getLexema());
             next();
             var_values_atribuition(symbol);
-            var_more_atribuition();
+            
+            Simbolo s_more_var = new Simbolo();
+            s_more_var.setScope(scope);
+            s_more_var.setCategory(symbol.getCategory());
+            s_more_var.setType(symbol.getType());
+            if(symbol.getStruct_id() != null){
+                s_more_var.setStruct_id(symbol.getStruct_id());
+            }
+            
+            var_more_atribuition(s_more_var);
             if(this.token.getLexema().equals(";")){
                 next();
             }
             
             Simbolo s_var = new Simbolo();
+            s_var.setScope(scope);
             var_values_declaration(scope, s_var);
         }
         
@@ -189,15 +200,20 @@ public class TokensReader {
             IDE_struct(scope, symbol);
             
             Simbolo s_typedef = new Simbolo();
+            s_typedef.setScope(scope);
+            s_typedef.setCategory(symbol.getCategory());
             var_values_declaration(scope, s_typedef);
         }
         
         if(this.token.getLexema().equals("struct")){
+            symbol.setCategory(category.STRUCT.toString());
             next();
             
             IDE_struct(scope, symbol);
             
             Simbolo s_struct = new Simbolo();
+            s_struct.setScope(scope);
+            s_struct.setCategory(symbol.getCategory());
             var_values_declaration(scope, s_struct);
         }
     }
@@ -213,12 +229,12 @@ public class TokensReader {
         IDE_struct_2(scope, symbol);
     }
     
-    private void IDE_struct_2(String scope, Simbolo symbol){
+    private void IDE_struct_2(String scope, Simbolo symbol_struct){
         
         if(this.token.getLexema().equals("extends")){
             next();
             if(this.token.getCodigo().equals("IDE")){
-                symbol.setExtends_id(this.token.getLexema());
+                symbol_struct.setExtends_id(this.token.getLexema());
                 next();
             }
         }
@@ -235,8 +251,10 @@ public class TokensReader {
             next();
         } 
         
-        
-        var_values_declaration(_scope.STRUCT.toString(), symbol);
+        Simbolo struct_var_symbol = new Simbolo();
+        struct_var_symbol.setScope(scope);
+        struct_var_symbol.setStruct_id(symbol_struct.getId());
+        var_values_declaration(scope, struct_var_symbol);
         
         if(this.token.getLexema().equals("}")){
             next();
@@ -246,7 +264,14 @@ public class TokensReader {
             next();
         }
         
-        var_values_declaration(scope);
+        if(!this.tabela_structs.contem(symbol_struct)){
+            this.tabela_structs.addElement(symbol_struct);
+        } else {
+            System.out.print("Struct já declarada!" + "\n" + symbol_struct.toString() + "\n");
+        }
+        
+        Simbolo new_symbol = new Simbolo();
+        var_values_declaration(scope, new_symbol);
     }
     
     private void var_values_atribuition(Simbolo symbol){
@@ -262,35 +287,61 @@ public class TokensReader {
     private void array_verification(Simbolo symbol){
         
         if(this.token.getLexema().equals("[")){
+            symbol.setIsArray(true);
             next();
             if(this.token.getCodigo().equals("NRO")){
-                symbol.setIsArray(true);
+                
                 // symbol.setArray_lenght(Integer.parseInt(this.token.getLexema()));
                 next();
             } 
             
+            if(this.token.getLexema().equals("]")){
+                next();
+            }
+            
             array_verification(symbol);
         }
-        
+ 
         if(symbol.getCategory().equals("VARIABLE")){
             if(symbol.getScope().equals("GLOBAL")){
-                this.tabela_variables.addElement(symbol);
+                if(!this.tabela_variables.contem(symbol)){
+                    this.tabela_variables.addElement(symbol);
+                } else {
+                    System.out.print("Variavel já declarada!" + "\n" + symbol.toString() + "\n");
+                }
             } else {
-                this.tabela_local_varibles.addElement(symbol);
+                if(!this.tabela_local_varibles.contem(symbol)){
+                    this.tabela_local_varibles.addElement(symbol);
+                } else {
+                    System.out.print("Variavel já declarada!" + "\n" + symbol.toString() + "\n");
+                }
             }
         }
         
         if(symbol.getCategory().equals("CONSTANT")){
-            this.tabela_constants.addElement(symbol);
+            if(!this.tabela_constants.contem(symbol)){
+                this.tabela_constants.addElement(symbol);
+            } else {
+                System.out.print("Constante já declarada!" + "\n" + symbol.toString() + "\n");
+            }
         }
     }
     
-    private void var_more_atribuition(){
+    private void var_more_atribuition(Simbolo symbol){
         
         if(this.token.getLexema().equals(",")){
             next();
-            var_values_atribuition();
-            var_more_atribuition();
+            var_values_atribuition(symbol);
+            
+            Simbolo s_more_var = new Simbolo();
+            s_more_var.setScope(symbol.getScope());
+            s_more_var.setCategory(symbol.getCategory());
+            s_more_var.setType(symbol.getType());
+            if(symbol.getStruct_id() != null){
+                s_more_var.setStruct_id(symbol.getStruct_id());
+            }
+            
+            var_more_atribuition(s_more_var);
         }
     }
     
@@ -364,7 +415,7 @@ public class TokensReader {
             next();
         }
         
-        var_fuctions_procedures(scope.LOCAL.toString());
+        var_fuctions_procedures(_scope.LOCAL.toString());
         
         if(scan.isCommands(this.token.getLexema()) || scan.isModifiers(this.token.getLexema())
                 || this.token.getCodigo().equals("IDE")){
@@ -404,7 +455,9 @@ public class TokensReader {
             next();
         } 
         
-        var_values_declaration(scope);
+        Simbolo symbol = new Simbolo();
+        symbol.setScope(scope);
+        var_values_declaration(scope, symbol);
         
         if(this.token.getLexema().equals("}")){
             next();

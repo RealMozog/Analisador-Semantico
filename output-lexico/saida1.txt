@@ -25,8 +25,12 @@
 <7: DEL, {>
 <8: PRE, int>
 <8: IDE, auxNum>
+<8: DEL, [>
+<8: DEL, ]>
 <8: DEL, ,>
 <8: IDE, testeNum>
+<8: DEL, ,>
+<8: IDE, next>
 <8: DEL, ,>
 <8: IDE, next>
 <8: DEL, ;>

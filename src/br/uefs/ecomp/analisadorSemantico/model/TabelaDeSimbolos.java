@@ -37,6 +37,7 @@ public class TabelaDeSimbolos {
     
     public void removeElement(Simbolo symbol){
         if(!this.contem(symbol)){
+            
             int indice = this.calculaIndiceDaTabela(symbol);
             List<Simbolo> lista = this.tabela.get(indice);
             lista.remove(symbol);
@@ -57,6 +58,7 @@ public class TabelaDeSimbolos {
     
     public boolean contem(Simbolo symbol) {
         int indice = this.calculaIndiceDaTabela(symbol);
+        System.out.print("\n"+ indice + "\n" + symbol.toString());
         List<Simbolo> lista = this.tabela.get(indice);
 
         return lista.contains(symbol);

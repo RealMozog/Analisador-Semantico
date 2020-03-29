@@ -20,7 +20,7 @@ public class Simbolo {
     private String scope;
     private String category;
     private String type;
-    private TabelaDeSimbolos struct_variables;
+    private String struct_id;
     private boolean isArray = false; 
     private boolean read;
     private String value;
@@ -54,7 +54,6 @@ public class Simbolo {
             
     public Simbolo(){
         this.parameters = new ArrayList();
-        this.struct_variables = new TabelaDeSimbolos();
     }
     
     public void addParam(String type, String id){
@@ -79,14 +78,6 @@ public class Simbolo {
         this.extends_id = extends_id;
     }
 
-    public TabelaDeSimbolos getStruct_variables() {
-        return struct_variables;
-    }
-
-    public void setStruct_variables(TabelaDeSimbolos struct_variables) {
-        this.struct_variables = struct_variables;
-    }
-
     public int getArray_lenght() {
         return array_lenght;
     }
@@ -94,8 +85,15 @@ public class Simbolo {
     public void setArray_lenght(int array_lenght) {
         this.array_lenght = array_lenght;
     }
-    
-    
+
+    public String getStruct_id() {
+        return struct_id;
+    }
+
+    public void setStruct_id(String struct_id) {
+        this.struct_id = struct_id;
+    }
+
     public String getId() {
         return id;
     }
@@ -158,7 +156,7 @@ public class Simbolo {
 
     @Override
     public String toString() {
-        return "Simbolo{" + "id=" + id + ", line=" + line + ", scope=" + scope + ", category=" + category + ", type=" + type + ", read=" + read + ", value=" + value + ", parameters=" + parameters + '}';
+        return "Simbolo{" + "id=" + id + ", extends_id=" + extends_id + ", line=" + line + ", array_lenght=" + array_lenght + ", scope=" + scope + ", category=" + category + ", type=" + type + ", struct_id=" + struct_id + ", isArray=" + isArray + ", read=" + read + ", value=" + value + ", parameters=" + parameters + '}';
     }
 
     @Override
@@ -167,6 +165,7 @@ public class Simbolo {
         hash = 79 * hash + Objects.hashCode(this.id);
         hash = 79 * hash + Objects.hashCode(this.scope);
         hash = 79 * hash + Objects.hashCode(this.parameters);
+        hash = 79 * hash + Objects.hashCode(this.type);
         return hash;
     }
 
@@ -179,15 +178,17 @@ public class Simbolo {
             return false;
         }
         final Simbolo other = (Simbolo) obj;
-        if (!Objects.equals(this.id, other.id)) {
-            return false;
+        if (Objects.equals(this.id, other.id)
+                && Objects.equals(this.scope, other.scope)
+                && Objects.equals(this.parameters, other.parameters)) {
+            if(this.struct_id != null && other.struct_id != null){
+                if(!Objects.equals(this.struct_id, this.struct_id)){
+                    return true;
+                }
+            }
+            
+            return true;
         }
-        if (!Objects.equals(this.scope, other.scope)) {
-            return false;
-        }
-        if (!Objects.equals(this.parameters, other.parameters)) {
-            return false;
-        }
-        return true;
+        return false;
     }
 }
