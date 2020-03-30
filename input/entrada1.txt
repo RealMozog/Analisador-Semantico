@@ -1,13 +1,17 @@
 const {
-    int a = 4.5;
+    int a = 4;
     boolean aux1 = true;
     real numeroAux = 4.478;
     string auxString = "Testando";
 } 
 var {
-    int auxNum[2][10], testeNum, next, next;
+    int auxNum[2][10], testeNum, next;
     string auxString;
 	struct istruct {
+	var {
+	int varia;
+}
+	struct inteiro {
 	var {
 	int varia;
 }
@@ -15,10 +19,10 @@ var {
 
 function int starti (){
     var {
-        int numLocal;
+        int numLocal[5];
         real numAux;
     }
-    numLocal = 3;
+    numLocal[] = 3;
     numAux = 1.1;
     while (numLocal < 3) {
         a = mudaNum (a);

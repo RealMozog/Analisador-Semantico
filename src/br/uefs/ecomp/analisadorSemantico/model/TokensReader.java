@@ -16,6 +16,7 @@ public class TokensReader {
     TabelaDeSimbolos tabela_local_varibles;
     TabelaDeSimbolos tabela_structs;
     TabelaDeSimbolos tabela_functions;
+    TabelaDeSimbolos tabela_call_functions;
     ScanLexema scan;
     Token token;
     
@@ -42,6 +43,7 @@ public class TokensReader {
         this.tabela_constants = new TabelaDeSimbolos();
         this.tabela_structs = new TabelaDeSimbolos();
         this.tabela_functions = new TabelaDeSimbolos();
+        this.tabela_call_functions = new TabelaDeSimbolos();
     }
     
     private void setErro(int line, String expected, String found){
@@ -64,6 +66,10 @@ public class TokensReader {
             for (Object lista : this.tabela_constants.pegaTodos()) {
                 System.out.print(lista.toString() + "\n");
             }
+            
+            for (Object lista : this.tabela_functions.pegaTodos()) {
+                System.out.print(lista.toString() + "\n");
+            }
             stateZero();
         }
     }
@@ -74,17 +80,33 @@ public class TokensReader {
             
             while(this.arq.hasNext()){
                 if(this.token.getLexema().equals("function")){
+                    Simbolo function = new Simbolo();
+                    function.setCategory(category.FUNCTION.toString());
                     next();
+                    
                     if(scan.isType(this.token.getLexema()) || this.token.getCodigo().equals("IDE")){
+                        if(this.token.getCodigo().equals("IDE")){
+                            Simbolo type_struct = new Simbolo();
+                            type_struct.setCategory(category.STRUCT.toString());
+                            type_struct.setId(this.token.getLexema());
+                            type_struct.setScope(_scope.GLOBAL.toString());
+                            
+                            if(this.tabela_structs.findById(type_struct) != null){
+                                System.out.print("Struct não declarada!");
+                            }
+                        }
+                        function.setType(this.token.getLexema());
                         next();
                     } 
 
                     if(this.token.getCodigo().equals("IDE")){
+                        function.setId(this.token.getLexema());
+                        function.setLine(this.token.getLine());
                         next();
                     }
 
-                    function_procedure();
-                    _return();
+                    function_procedure(function);
+                    _return(function);
 
                     if(this.token.getLexema().equals("}")){
                         next();
@@ -92,12 +114,16 @@ public class TokensReader {
                 }
 
                 if(this.token.getLexema().equals("procedure")){
+                    Simbolo procedure = new Simbolo();
+                    procedure.setCategory(category.FUNCTION.toString());
                     next();
                     if(this.token.getCodigo().equals("IDE") || this.token.getLexema().equals("start")){
+                        procedure.setId(this.token.getLexema());
+                        procedure.setId(this.token.getLine());
                         next();
                     }
 
-                    function_procedure();
+                    function_procedure(procedure);
 
                     if(this.token.getLexema().equals("}")){
                        next();
@@ -280,6 +306,7 @@ public class TokensReader {
         }
         
         Simbolo new_symbol = new Simbolo();
+        new_symbol.setScope(scope);
         var_values_declaration(scope, new_symbol);
     }
     
@@ -434,16 +461,22 @@ public class TokensReader {
         }
     }
     
-    private void function_procedure (){
+    private void function_procedure (Simbolo symbol){
         
         if(this.token.getLexema().equals("(")){
             next();
         }
         
-        params_list();
+        params_list(symbol);
         
         if(this.token.getLexema().equals(")")){
             next();
+        }
+        
+        if(!this.tabela_functions.contem(symbol)){
+            this.tabela_functions.addElement(symbol);
+        } else {
+            System.out.print("Função ou procedimento já declarada!" + "\n" + symbol.toString());
         }
         
         if(this.token.getLexema().equals("{")){
@@ -458,31 +491,33 @@ public class TokensReader {
         
         if(scan.isCommands(this.token.getLexema()) || scan.isModifiers(this.token.getLexema())
                 || this.token.getCodigo().equals("IDE")){
-            commands();
+            commands(symbol);
         }
     }
     
-    private void params_list () {
-        param();
+    private void params_list (Simbolo symbol) {
+        param(symbol);
     }
     
-    private void param(){
+    private void param(Simbolo symbol){
         
         if(scan.isType(this.token.getLexema()) || this.token.getCodigo().equals("IDE")){
+            String type = this.token.getLexema();
             next();
             if(this.token.getCodigo().equals("IDE")){
+                symbol.addParam(type, this.token.getLexema());
                 next();
             }
 
-            more_params();
+            more_params(symbol);
         }
     }
     
-    private void more_params(){
+    private void more_params(Simbolo symbol){
         
         if(this.token.getLexema().equals(",")){
             next();
-            param();
+            param(symbol);
         } 
     }
             
@@ -503,7 +538,7 @@ public class TokensReader {
         } 
     }
     
-    private void commands () {
+    private void commands (Simbolo symbol) {
         
         if(this.token.getLexema().equals("if")){
             next();
@@ -533,14 +568,18 @@ public class TokensReader {
         }
         
         if(this.token.getCodigo().equals("IDE")){
+            Simbolo call = new Simbolo();
+            call.setId(this.token.getLexema());
+            call.setLine(this.token.getLine());
             next();
             if(this.token.getLexema().equals("(")){
-                call_procedure_function();
+                call_procedure_function(call);
                 if(this.token.getLexema().equals(";")){
                     next();
                 }
             } else {
-                paths();
+                call.setType(category.VARIABLE.toString());
+                paths(call);
                 if(scan.isUnaryOp(this.token.getLexema())){
                     next();
                     if(this.token.getLexema().equals(";")){
@@ -549,23 +588,23 @@ public class TokensReader {
                 } else {
                     if(this.token.getLexema().equals("=")){
                         next();
-                        assing();
+                        assing(call);
                     } 
                 } 
             }
         }
     }
     
-    private void assing(){
+    private void assing(Simbolo symbol){
         
         if(scan.isModifiers(this.token.getLexema()) || this.token.getLexema().equals("-") 
                 || this.token.getCodigo().equals("NRO") || scan.isBooleans(this.token.getLexema())
                 || scan.isUnaryOp(this.token.getLexema()) || this.token.getLexema().equals("!")){
-            expression();
+            expression(symbol);
         } else if(this.token.getCodigo().equals("IDE")){
-                expression();
+                expression(symbol);
                 if(this.token.getLexema().equals("(")){
-                    call_procedure_function();
+                    call_procedure_function(symbol);
                 }
         } else if(this.token.getCodigo().equals("CDC")){
                 next();
@@ -575,7 +614,7 @@ public class TokensReader {
             next();
         } 
         
-        commands();
+        commands(symbol);
     }
     
     private void unary_operation(){
@@ -630,66 +669,72 @@ public class TokensReader {
     }
     
     private void commands_exp(){
+        String type = "undefined";
         
-        logical_exp();
+        logical_exp(type);
+        
+        if(type.equals("boolean")){
+            System.out.print("Tipo imcompativel para comandos if e while");
+        }
     }
     
-    private void expression() {
+    private void expression(Simbolo symbol) {
+        String type = "undefined";
         
-        aritmetic_exp();
+        aritmetic_exp(type);
         if(scan.isRelationalOpStronger(this.token.getLexema()) || scan.isRelationalOpWeaker(this.token.getLexema())){
-            opt_relational_exp();
+            opt_relational_exp(type);
             if(scan.isLogicalOp(this.token.getLexema())){
-                logical_exp();
+                logical_exp(type);
             }
         }
     }
     
-    private void logical_exp(){
+    private void logical_exp(String type){
         
-        relational_exp();
-        opt_logical_exp();
+        relational_exp(type);
+        opt_logical_exp(type);
     }
     
-    private void relational_exp(){
+    private void relational_exp(String type){
         
         if(this.token.getLexema().equals("(")){
             next();
-            logical_exp();
+            logical_exp(type);
             if(this.token.getLexema().equals(")")){
                 next();
             } 
         } else {
-            aritmetic_exp();
-            opt_relational_exp();
+            aritmetic_exp(type);
+            opt_relational_exp(type);
         }
     }
     
-    private void aritmetic_exp(){
+    private void aritmetic_exp(String type){
         
         if(this.token.getLexema().equals("(")){
             next();
-            relational_exp();
+            relational_exp(type);
             if(this.token.getLexema().equals(")")){
                 next();
             } 
         } else {
-            operation();
-            op_sum();
+            operation(type);
+            op_sum(type);
         }
     }
     
-    private void operation(){
+    private void operation(String type){
         
-        op_unary();
-        op_times_div();
+        op_unary(type);
+        op_times_div(type);
     }
     
-    private void op_unary(){
+    private void op_unary(String type){
         
         if(this.token.getLexema().equals("(")){
             next();
-            aritmetic_exp();
+            aritmetic_exp(type);
             if(this.token.getLexema().equals(")")){
                 next();
             } 
@@ -699,82 +744,82 @@ public class TokensReader {
         
     }
     
-    private void op_times_div(){
+    private void op_times_div(String type){
         
         if(scan.isTimesDiv(this.token.getLexema())){
             next();
-            op_unary();
-            op_times_div();
+            op_unary(type);
+            op_times_div(type);
         }
     }
     
-    private void op_sum(){
+    private void op_sum(String type){
         
         if(scan.isPlusMinus(this.token.getLexema())){
             next();
-            operation();
-            op_sum();
+            operation(type);
+            op_sum(type);
         }
     }
     
-    private void inequal_exp(){
+    private void inequal_exp(String type){
         
         if(scan.isRelationalOpStronger(this.token.getLexema())){
             next();
-            aritmetic_exp();
-            equal_exp();
+            aritmetic_exp(type);
+            equal_exp(type);
         }
     }
     
-    private void equal_exp(){
+    private void equal_exp(String type){
         
         if(scan.isRelationalOpWeaker(this.token.getLexema())){
             next();
-            aritmetic_exp();
-            inequal_exp();
-            equal_exp();
+            aritmetic_exp(type);
+            inequal_exp(type);
+            equal_exp(type);
         }
     }
     
-    private void opt_relational_exp(){
+    private void opt_relational_exp(String type){
         
         if(scan.isRelationalOpStronger(this.token.getLexema())){
             next();
-            aritmetic_exp();
-            inequal_exp();
-            equal_exp();
+            aritmetic_exp(type);
+            inequal_exp(type);
+            equal_exp(type);
         } else if(scan.isRelationalOpWeaker(this.token.getLexema())){
             next();
-            aritmetic_exp();
-            inequal_exp();
+            aritmetic_exp(type);
+            inequal_exp(type);
         }
     }
     
-    private void opt_logical_exp(){
+    private void opt_logical_exp(String type){
         
         if(scan.isLogicalOp(this.token.getLexema())){
             next();
-            logical_exp();
+            logical_exp(type);
         }
     }
     
-    private void call_procedure_function(){
+    private void call_procedure_function(Simbolo symbol){
         
         if(this.token.getLexema().equals("(")){
             next();
         }
         
-        realParams();
+        realParams(symbol);
         
         if(this.token.getLexema().equals(")")){
             next();
         }
         
-        commands();
+        commands(symbol);
     }
     
-    private void realParams(){
-        realParam();
+    private void realParams(Simbolo symbol){
+        realParam(symbol);
     }
     
     private void realParam(){
@@ -914,7 +959,7 @@ public class TokensReader {
             next();
         }
         
-        commands();
+        commands(symbol);
         
         if(this.token.getLexema().equals("}")){
             next();
@@ -941,16 +986,16 @@ public class TokensReader {
             next();
         }
         
-        commands();
+        commands(symbol);
         
         if(this.token.getLexema().equals("}")){
             next();
         }
         
-        elseStatement();
+        elseStatement(symbol);
     }
     
-    private void elseStatement(){
+    private void elseStatement(Simbolo symbol){
         
         if(this.token.getLexema().equals("else")){
             next();
@@ -958,7 +1003,7 @@ public class TokensReader {
                 next();
             } 
             
-            commands();
+            commands(symbol);
             
             if(this.token.getLexema().equals("}")){
                 next();
@@ -966,11 +1011,11 @@ public class TokensReader {
         }
     }
     
-    private void _return () {
+    private void _return (Simbolo symbol) {
         
         if(this.token.getLexema().equals("return")){
             next();
-            expression();
+            expression(symbol);
         } 
         
         if(token.getLexema().equals(";")){
@@ -981,24 +1026,31 @@ public class TokensReader {
     private void call_variable (){
         
         if(scan.isModifiers(this.token.getLexema())){
+            Simbolo search_variable = new Simbolo();
+            if(this.token.getLexema().equals("global")){
+                search_variable.setScope(_scope.GLOBAL.toString());
+            } else {
+                search_variable.setScope(_scope.LOCAL.toString());
+            }
             next();
             if(this.token.getLexema().equals(".")){
                 next();
             } 
             
             if(this.token.getCodigo().equals("IDE")){
+                search_variable.setId(this.token.getLexema());
                 next();
             }
             
-            paths();
+            paths(search_variable);
         }
     }
     
-    private void paths (){
+    private void paths (Simbolo symbol){
         
         if(this.token.getLexema().equals(".")){
             next();
-            struct();
+            struct(symbol);
         }
         
         if(this.token.getLexema().equals("[")){
@@ -1007,12 +1059,15 @@ public class TokensReader {
         }
     }
     
-    private void struct(){
+    private void struct(Simbolo symbol){
         
         if(this.token.getCodigo().equals("IDE")){
+            symbol.setStruct_id(symbol.getId());
+            symbol.setId(this.token.getLexema());
+            symbol.setScope(_scope.STRUCT.toString());
             next();
             if(this.token.getLexema().equals(".") || this.token.getLexema().equals("[")){
-                paths();
+                paths(symbol);
             }
         }
     }
@@ -1020,6 +1075,26 @@ public class TokensReader {
     private void matriz(){
         
         if(this.token.getCodigo().equals("NRO") || this.token.getCodigo().equals("IDE")){
+            if(this.token.getCodigo().equals("IDE")){
+                Simbolo indice_var = new Simbolo();
+                indice_var.setId(this.token.getLexema());
+                indice_var.setScope(_scope.LOCAL.toString());
+                
+                if(this.tabela_local_varibles.findById(indice_var) == null){
+                    indice_var.setScope(_scope.GLOBAL.toString());
+                    if(this.tabela_variables.findById(indice_var) == null){
+                        System.out.print("Variavel não declarada!");
+                    } else {
+                        indice_var = this.tabela_local_varibles.findById(indice_var);
+                    }
+                } else {
+                    indice_var = this.tabela_local_varibles.findById(indice_var);
+                }
+                
+                if(!indice_var.getType().equals("int")){
+                    System.out.print("Tipo incompativel para indice de arrays");
+                }
+            }
             next();
         }
         

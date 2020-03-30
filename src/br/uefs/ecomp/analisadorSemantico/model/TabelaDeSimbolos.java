@@ -58,10 +58,24 @@ public class TabelaDeSimbolos {
     
     public boolean contem(Simbolo symbol) {
         int indice = this.calculaIndiceDaTabela(symbol);
-        System.out.print("\n"+ indice + "\n" + symbol.toString());
+        // System.out.print("\n"+ indice + "\n" + symbol.toString());
         List<Simbolo> lista = this.tabela.get(indice);
 
         return lista.contains(symbol);
+    }
+    
+    public Simbolo findById(Simbolo Id){
+        int indice = this.calculaIndiceDaTabela(Id);
+        System.out.print("\n"+ indice + "\n" + Id.toString());
+        List<Simbolo> lista = this.tabela.get(indice);
+        
+        for(Simbolo item: lista){
+            if(item.getId().equals(Id.getId()) && item.getScope().equals(Id.getScope())){
+                return item;
+            }
+        }
+        
+        return null;
     }
     
     public void updateValue(String lexema, String value){
