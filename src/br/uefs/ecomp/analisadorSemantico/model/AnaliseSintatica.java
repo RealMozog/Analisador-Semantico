@@ -24,7 +24,7 @@ public class AnaliseSintatica {
         AnaliseLexica al = new AnaliseLexica();        
         AnalisadorSemanticoController controller = new AnalisadorSemanticoController();
         Iterator<Token> it; 
-        Iterator<Error> e;
+        Iterator<Object> e;
         String output = "";
         int count = 1;
         

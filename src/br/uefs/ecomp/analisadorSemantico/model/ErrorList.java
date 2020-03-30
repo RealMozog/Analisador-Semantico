@@ -15,11 +15,11 @@ public class ErrorList {
         this.errorList = new ArrayList<>();
     }
     
-    public void addErro(Error erro){
+    public void addErro(Object erro){
         this.errorList.add(erro);
     }
     
-    public Iterator<Error> iterator(){
+    public Iterator<Object> iterator(){
         return this.errorList.iterator();
     }
 }

@@ -27,7 +27,7 @@ public class AnalisadorSemanticoController {
         this.list = this.tr.stateZero();
     }
     
-    public Iterator<Error> iteratorErrors(){
+    public Iterator<Object> iteratorErrors(){
         return this.list.iterator();
     }
 }
