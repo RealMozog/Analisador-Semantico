@@ -4,9 +4,11 @@
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
             <file>file:/C:/Users/sandr/Documents/Projects/Analisador-Semantico/src/br/uefs/ecomp/analisadorSemantico/model/TokensReader.java</file>
+            <file>file:/C:/Users/sandr/Documents/Projects/Analisador-Semantico/src/br/uefs/ecomp/analisadorSemantico/view/AnalisadorSemantico.java</file>
             <file>file:/C:/Users/sandr/Documents/Projects/Analisador-Semantico/src/br/uefs/ecomp/analisadorSemantico/model/ScanLexema.java</file>
             <file>file:/C:/Users/sandr/Documents/Projects/Analisador-Semantico/src/br/uefs/ecomp/analisadorSemantico/model/ErrorList.java</file>
             <file>file:/C:/Users/sandr/Documents/Projects/Analisador-Semantico/src/br/uefs/ecomp/analisadorSemantico/controller/AnalisadorSemanticoController.java</file>
+            <file>file:/C:/Users/sandr/Documents/Projects/Analisador-Semantico/src/br/uefs/ecomp/analisadorSemantico/model/AnaliseSemantica.java</file>
             <file>file:/C:/Users/sandr/Documents/Projects/Analisador-Semantico/src/br/uefs/ecomp/analisadorSemantico/model/TabelaDeSimbolos.java</file>
             <file>file:/C:/Users/sandr/Documents/Projects/Analisador-Semantico/src/br/uefs/ecomp/analisadorSemantico/model/Error.java</file>
             <file>file:/C:/Users/sandr/Documents/Projects/Analisador-Semantico/src/br/uefs/ecomp/analisadorSemantico/model/Simbolo.java</file>

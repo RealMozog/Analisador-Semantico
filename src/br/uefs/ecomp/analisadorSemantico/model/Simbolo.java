@@ -165,7 +165,7 @@ public class Simbolo {
         hash = 79 * hash + Objects.hashCode(this.id);
         hash = 79 * hash + Objects.hashCode(this.scope);
         hash = 79 * hash + Objects.hashCode(this.parameters);
-        hash = 79 * hash + Objects.hashCode(this.type);
+        hash = 79 * hash + Objects.hashCode(this.category);
         return hash;
     }
 
@@ -181,13 +181,15 @@ public class Simbolo {
         if (Objects.equals(this.id, other.id)
                 && Objects.equals(this.scope, other.scope)
                 && Objects.equals(this.parameters, other.parameters)) {
-            if(this.struct_id != null && other.struct_id != null){
-                if(!Objects.equals(this.struct_id, this.struct_id)){
-                    return true;
+            if(other.struct_id != null){
+                if(this.struct_id != null){
+                    if(Objects.equals(this.struct_id, this.struct_id)){
+                        return true;
+                    }
                 }
+            } else {
+                return true;
             }
-            
-            return true;
         }
         return false;
     }

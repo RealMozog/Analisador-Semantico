@@ -38,7 +38,7 @@ function inteiro mudaNum (real a){
             a++;
         } else {
             if (a < 5) then {
-                a = a.b.v.b * 3;
+                a = a.b * 3;
             } else {
                     if (a < 10) then {
                     a = a + 3;

@@ -60,7 +60,7 @@ public class TabelaDeSimbolos {
         int indice = this.calculaIndiceDaTabela(symbol);
         // System.out.print("\n"+ indice + "\n" + symbol.toString());
         List<Simbolo> lista = this.tabela.get(indice);
-
+        
         return lista.contains(symbol);
     }
     
@@ -71,7 +71,15 @@ public class TabelaDeSimbolos {
         
         for(Simbolo item: lista){
             if(item.getId().equals(Id.getId()) && item.getScope().equals(Id.getScope())){
-                return item;
+                if(Id.getStruct_id() != null){
+                    if(item.getStruct_id() != null){
+                        if(item.getStruct_id().equals(Id.getStruct_id())){
+                            return item;
+                        }
+                    }
+                } else {
+                    return item;
+                }
             }
         }
         
