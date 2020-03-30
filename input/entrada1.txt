@@ -7,7 +7,7 @@ const {
 var {
     int auxNum[2][10], testeNum, next;
     string auxString;
-	struct istruct {
+	struct istruct extends j {
 	var {
 	int varia;
 }
@@ -22,7 +22,7 @@ function int starti (){
         int numLocal[5];
         real numAux;
     }
-    numLocal[] = 3;
+    numLocal = 3;
     numAux = 1.1;
     while (numLocal < 3) {
         a = mudaNum (a);
@@ -32,13 +32,13 @@ function int starti (){
     return 0;
 }
 
-function inteiro mudaNum (real a){
+function inteiro mudaNum (real a, int b){
     var {}    
     if ((a == c && c <= d)) then {
             a++;
         } else {
             if (a < 5) then {
-                a = a.b * 3;
+                b = a.besta * 3;
             } else {
                     if (a < 10) then {
                     a = a + 3;
@@ -48,7 +48,7 @@ function inteiro mudaNum (real a){
         return a;
 }
 
-procedure aumentaNum (int a){
+procedure addNum(real a, int c){
     var {}   
     a = a + 20;
 }

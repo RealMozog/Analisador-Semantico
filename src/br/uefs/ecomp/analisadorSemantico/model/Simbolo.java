@@ -50,6 +50,40 @@ public class Simbolo {
         public void setId(String id) {
             this.id = id;
         }
+
+        @Override
+        public String toString() {
+            return "Param{" + "type=" + type + ", id=" + id + '}';
+        }
+        
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            final Param other = (Param) obj;
+            if (!Objects.equals(this.type, other.type)) {
+                return false;
+            }
+            if(this.type != null){
+                if(other.type != null){
+                    if (!Objects.equals(this.id, other.id)) {
+                        return false;
+                    }
+                }
+            }
+            
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            int hash = 3;
+            return hash;
+        }
     }
             
     public Simbolo(){
@@ -61,6 +95,16 @@ public class Simbolo {
         
         this.parameters.add(p);
     }
+    
+    public Param findParamById(String Id){
+            for (Param p : this.getParameters()){
+                if(p.id.equals(Id)){
+                    return p;
+                }
+            }
+            
+            return null;
+        }
 
     public String getExtends_id() {
         return extends_id;
@@ -166,6 +210,7 @@ public class Simbolo {
         hash = 79 * hash + Objects.hashCode(this.scope);
         hash = 79 * hash + Objects.hashCode(this.parameters);
         hash = 79 * hash + Objects.hashCode(this.category);
+        hash = 79 * hash + Objects.hashCode(this.struct_id);
         return hash;
     }
 
@@ -183,7 +228,7 @@ public class Simbolo {
                 && Objects.equals(this.parameters, other.parameters)) {
             if(other.struct_id != null){
                 if(this.struct_id != null){
-                    if(Objects.equals(this.struct_id, this.struct_id)){
+                    if(Objects.equals(other.struct_id, this.struct_id)){
                         return true;
                     }
                 }

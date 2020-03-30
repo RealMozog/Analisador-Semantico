@@ -62,6 +62,10 @@ public class TokensReader {
             this.token = this.arq.next();
         } else {
             for (Simbolo lista : this.tabela_variables.pegaTodos()) {
+                // System.out.print(lista.toString() + "\n");
+            }
+            
+            for (Simbolo lista : this.tabela_structs.pegaTodos()) {
                 //System.out.print(lista.toString() + "\n");
             }
             
@@ -74,7 +78,7 @@ public class TokensReader {
             }
             
             for (Simbolo lista : this.tabela_functions.pegaTodos()) {
-               // System.out.print(lista.toString() + "\n");
+               System.out.print(lista.toString() + "\n");
             }
             
             for (Simbolo lista : this.tabela_call_functions.pegaTodos()) {
@@ -129,7 +133,7 @@ public class TokensReader {
 
                     if(this.token.getLexema().equals("}")){
                         next();
-                     }
+                    }
                 }
 
                 if(this.token.getLexema().equals("procedure")){
@@ -337,6 +341,22 @@ public class TokensReader {
             next();
         } 
         array_verification(symbol);
+        
+        if(symbol.getCategory().equals("VARIABLE")){
+            if(symbol.getScope().equals("GLOBAL")){
+                if(!this.tabela_variables.contem(symbol)){
+                    this.tabela_variables.addElement(symbol);
+                } else {
+                    setSemanticError("Variavel " + symbol.getId()+ " na linha " + symbol.getLine() + " já declarada!");
+                }
+            } else {
+                if(!this.tabela_local_varibles.contem(symbol)){
+                    this.tabela_local_varibles.addElement(symbol);
+                } else {
+                    setSemanticError("Variavel " + symbol.getId()+ " na linha " + symbol.getLine() + " já declarada!");
+                }
+            }
+        }
     }
     
     private void array_verification(Simbolo symbol){
@@ -358,22 +378,6 @@ public class TokensReader {
             }
             
             array_verification(symbol);
-        }
- 
-        if(symbol.getCategory().equals("VARIABLE")){
-            if(symbol.getScope().equals("GLOBAL")){
-                if(!this.tabela_variables.contem(symbol)){
-                    this.tabela_variables.addElement(symbol);
-                } else {
-                    setSemanticError("Variavel " + symbol.getId()+ " na linha " + symbol.getLine() + " já declarada!");
-                }
-            } else {
-                if(!this.tabela_local_varibles.contem(symbol)){
-                    this.tabela_local_varibles.addElement(symbol);
-                } else {
-                    setSemanticError("Variavel " + symbol.getId()+ " na linha " + symbol.getLine() + " já declarada!");
-                }
-            }
         }
     }
     
@@ -484,22 +488,22 @@ public class TokensReader {
         }
     }
     
-    private void function_procedure (Simbolo symbol){
+    private void function_procedure (Simbolo function){
         
         if(this.token.getLexema().equals("(")){
             next();
         }
         
-        params_list(symbol);
+        params_list(function);
         
         if(this.token.getLexema().equals(")")){
             next();
         }
         
-        if(!this.tabela_functions.contem(symbol)){
-            this.tabela_functions.addElement(symbol);
+        if(!this.tabela_functions.contem(function)){
+            this.tabela_functions.addElement(function);
         } else {
-            setSemanticError("Função ou procedimento " + symbol.getId()+ " na linha " + symbol.getLine() + " já declarada!");
+            setSemanticError("Função ou procedimento " + function.getId()+ " na linha " + function.getLine() + " já declarada!");
         }
         
         if(this.token.getLexema().equals("{")){
@@ -523,11 +527,29 @@ public class TokensReader {
     }
     
     private void param(Simbolo symbol){
+        Simbolo param = new Simbolo();
         
         if(scan.isType(this.token.getLexema()) || this.token.getCodigo().equals("IDE")){
+            if(scan.isType(this.token.getLexema())){
+                param.setType(this.token.getLexema());
+                param.setCategory(category.VARIABLE.toString());
+                param.setLine(this.token.getLine());
+            } else {
+                param.setId(this.token.getLexema());
+                param.setScope(_scope.GLOBAL.toString());
+                param.setLine(this.token.getLine());
+                if(!this.tabela_structs.contem(param)){
+                    setSemanticError("Tipo inválido para struct com nome: " + param.getId() +
+                                " na linha " + param.getLine());
+                }
+            }
+            
             String type = this.token.getLexema();
             next();
             if(this.token.getCodigo().equals("IDE")){
+                param.setScope(_scope.LOCAL.toString());
+                param.setId(this.token.getLexema());
+                this.tabela_local_varibles.addElement(param);
                 symbol.addParam(type, this.token.getLexema());
                 next();
             }
@@ -686,23 +708,26 @@ public class TokensReader {
             next();
             paths(symbol);
             
-            if(!this.tabela_local_varibles.contem(symbol)){
-                setSemanticError("Variável " + symbol.getId()+ " na linha " + symbol.getLine() + " não foi declarada!");
-            } else {
+            if(this.tabela_local_varibles.contem(symbol)){
                 symbol.setType(this.tabela_local_varibles.findById(symbol).getType());
-            }
-            
-            if(symbol.getStruct_id() == null){
-                if(!this.tabela_constants.contem(symbol)){
-                    setSemanticError("Constante " + symbol.getId()+ " na linha " + symbol.getLine() + " não foi declarada!");
-                } else {
-                    symbol.setType(this.tabela_constants.findById(symbol).getType());
-                }
             } else {
-                if(!this.tabela_variables.contem(symbol)){
-                    setSemanticError("Variavel " + symbol.getId()+ " na linha " + symbol.getLine() + " não foi declarada!");
+                if(symbol.getStruct_id() == null){
+                    if(this.tabela_constants.contem(symbol)){
+                        symbol.setType(this.tabela_constants.findById(symbol).getType());
+                    } else 
+                        if(!this.tabela_variables.contem(symbol)){
+                            setSemanticError("Variavel, constante ou atributo de struct " 
+                                    + symbol.getId()+ " na linha " + symbol.getLine() + " não foi declarada!");
+                        } else {
+                            symbol.setType(this.tabela_variables.findById(symbol).getType());
+                        }
                 } else {
-                    symbol.setType(this.tabela_variables.findById(symbol).getType());
+                    if(!this.tabela_variables.contem(symbol)){
+                        setSemanticError("Variavel, constante ou atributo de struct " 
+                                + symbol.getId()+ " na linha " + symbol.getLine() + " não foi declarada!");
+                    } else {
+                        symbol.setType(this.tabela_variables.findById(symbol).getType());
+                    }
                 }
             }
         }

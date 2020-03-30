@@ -41,6 +41,8 @@
 <9: DEL, ;>
 <10: PRE, struct>
 <10: IDE, istruct>
+<10: PRE, extends>
+<10: IDE, j>
 <10: DEL, {>
 <11: PRE, var>
 <11: DEL, {>
@@ -77,8 +79,6 @@
 <23: DEL, ;>
 <24: DEL, }>
 <25: IDE, numLocal>
-<25: DEL, [>
-<25: DEL, ]>
 <25: REL, =>
 <25: NRO, 3>
 <25: DEL, ;>
@@ -116,6 +116,9 @@
 <35: DEL, (>
 <35: PRE, real>
 <35: IDE, a>
+<35: DEL, ,>
+<35: PRE, int>
+<35: IDE, b>
 <35: DEL, )>
 <35: DEL, {>
 <36: PRE, var>
@@ -149,11 +152,11 @@
 <40: DEL, )>
 <40: PRE, then>
 <40: DEL, {>
-<41: IDE, a>
+<41: IDE, b>
 <41: REL, =>
 <41: IDE, a>
 <41: DEL, .>
-<41: IDE, b>
+<41: IDE, besta>
 <41: ART, *>
 <41: NRO, 3>
 <41: DEL, ;>
@@ -182,10 +185,13 @@
 <48: DEL, ;>
 <49: DEL, }>
 <51: PRE, procedure>
-<51: IDE, aumentaNum>
+<51: IDE, addNum>
 <51: DEL, (>
-<51: PRE, int>
+<51: PRE, real>
 <51: IDE, a>
+<51: DEL, ,>
+<51: PRE, int>
+<51: IDE, c>
 <51: DEL, )>
 <51: DEL, {>
 <52: PRE, var>
