@@ -52,6 +52,12 @@ public class TabelaDeSimbolos {
         return codigoDeEspalhamento % tabela.size();
     }
     
+    public void removeAll(){
+        for (List<Simbolo> lista: this.tabela){
+            lista.clear();
+        }
+    }
+    
     public int tamanho() {
         return this.tamanho;
     }
