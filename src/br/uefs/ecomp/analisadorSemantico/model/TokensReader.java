@@ -50,6 +50,10 @@ public class TokensReader {
         this.tabela_functions = new TabelaDeSimbolos();
         this.tabela_call_functions = new TabelaDeSimbolos();
     }
+
+    public ErrorList getSemanticErrors() {
+        return semanticErrors;
+    }
     
     private void setErro(int line, String expected, String found){
         Error erro = new Error(line, expected, found); 

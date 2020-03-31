@@ -25,6 +25,7 @@ public class AnaliseSintatica {
         AnalisadorSemanticoController controller = new AnalisadorSemanticoController();
         Iterator<Token> it; 
         Iterator<Object> e;
+        Iterator<Object> s;
         String output = "";
         int count = 1;
         
@@ -32,6 +33,7 @@ public class AnaliseSintatica {
             it = arq.iterator();
             controller.analiseArq(it);
             e = controller.iteratorErrors();
+            s = controller.iteratorSemanticErrors();
 
             if(!e.hasNext()){
                 output = "Nenhum erro sintático encontrado no arquivo de entrada" + count;
@@ -42,18 +44,36 @@ public class AnaliseSintatica {
                 }
             }
             
-            write_output(output, count);
+            write_output(output, count, false);
             output = "";
+            
+            if(!s.hasNext()){
+                output = "Nenhum erro semântico encontrado no arquivo de entrada" + count;
+            } else {
+                while(s.hasNext()){
+                    output += s.next().toString() + "\n";
+                }
+            }
+            
+            write_output(output, count, true);
+
             count++;
         }
     }
     
-    private void write_output(String erros, int count) throws IOException{
+    private void write_output(String erros, int count, boolean isSemantic) throws IOException{
+        String caminho;
         
-        Path path = Paths.get("output-sintatico\\saida" + count + ".txt");
+        if(isSemantic){
+            caminho = "output\\saida";
+        } else {
+            caminho = "output-sintatico\\saida";
+        }
+        
+        Path path = Paths.get(caminho + count + ".txt");
         
         byte[] strToBytes = erros.getBytes();
         
         Files.write(path, strToBytes);
-    }   
+    }  
 }

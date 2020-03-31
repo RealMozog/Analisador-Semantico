@@ -30,4 +30,8 @@ public class AnalisadorSemanticoController {
     public Iterator<Object> iteratorErrors(){
         return this.list.iterator();
     }
+    
+    public Iterator<Object> iteratorSemanticErrors(){
+        return this.tr.getSemanticErrors().iterator();
+    }
 }
