@@ -40,7 +40,6 @@ public class AnaliseLexica {
         
         try{
             String path = "input\\entrada" + count + ".txt";
-            System.out.print(path);
             String arq = new String(Files.readAllBytes(Paths.get(path)), StandardCharsets.UTF_8);
             
             while (!arq.isEmpty()){

@@ -90,11 +90,6 @@ public class TokensReader {
                 }
             }
         }
-        
-        Iterator it = this.semanticErrors.iterator();
-            while (it.hasNext()){
-                System.out.print(it.next() + "\n");
-            }
     }
     
     public ErrorList stateZero() {
@@ -1179,8 +1174,6 @@ public class TokensReader {
         this.type = "undefined";
         this.isExpression = false;
         
-        System.out.print(symbol.getType() + "\n");
-        
         aritmetic_exp();
         if(scan.isRelationalOpStronger(this.token.getLexema()) || scan.isRelationalOpWeaker(this.token.getLexema())){
             opt_relational_exp();
@@ -1201,8 +1194,6 @@ public class TokensReader {
                         + "função de tipo " + symbol.getType() + " na linha " + symbol.getLine());
             }
         }
-        
-        System.out.print(symbol.getType() + this.type + "\n");
     }
     
     private void logical_exp(){
