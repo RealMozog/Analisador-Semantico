@@ -12,16 +12,16 @@ typedef struct j {
 
 }
 }
-	
-	struct istruct extends j {
+struct istruct extends j {
 	var {
 	int varia;
 }
-	struct inteiro {
+}
+struct inteiro {
 	var {
 	int varia;
 }
-
+}
 }
 
 function int starti (){
@@ -47,6 +47,7 @@ function inteiro mudaNum (int a){
 struct inteiro extends j {
 	var {
 	int varia;
+}
 }
 }    
     if ((a == c && a <= d)) then {

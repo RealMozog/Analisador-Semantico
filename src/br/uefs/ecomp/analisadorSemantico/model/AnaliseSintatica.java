@@ -49,6 +49,7 @@ public class AnaliseSintatica {
             
             if(!s.hasNext()){
                 output = "Nenhum erro semântico encontrado no arquivo de entrada" + count;
+                System.out.print(output + "\n");
             } else {
                 while(s.hasNext()){
                     output += s.next().toString() + "\n";
