@@ -30,7 +30,9 @@ function int starti (){
         real numAux;
 	boolean a;
     }
-    numLocal = 3;
+    numLocal = "string";
+	aux1 = 12;
+	testeNum = true;
     numAux = 1.1;
     while (numLocal < 3) {
         a = mudaNum(3);

@@ -10,6 +10,7 @@ import java.util.Iterator;
  */
 public class TokensReader {
     String type;
+    boolean isExpression = false;
     Iterator<Token> arq;
     ErrorList erroList;
     ErrorList semanticErrors;
@@ -670,8 +671,29 @@ public class TokensReader {
                     next();
                 }
             } else {
-                call.setType(category.VARIABLE.toString());
+                call.setCategory(category.VARIABLE.toString());
+                call.setScope(_scope.LOCAL.toString());
+                
                 paths(call);
+                
+                if(!this.tabela_local_varibles.contem(call)){
+                    call.setScope(_scope.GLOBAL.toString());
+                    if(!this.tabela_variables.contem(call)){
+                        if(this.tabela_constants.contem(call)){
+                            setSemanticError("Não pode atribuir valor a constante " +  call.getId() 
+                            + " na linha " + call.getLine());
+                        } else {
+                            setSemanticError("Variavel " +  call.getId() + " na linha " + call.getLine()
+                                + " não declarada!");
+                        }
+                    } else {
+                        call.setType(this.tabela_variables.findById(call).getType());
+                    }
+                    
+                } else {
+                    call.setType(this.tabela_local_varibles.findById(call).getType());
+                }
+                
                 if(scan.isUnaryOp(this.token.getLexema())){
                     next();
                     if(this.token.getLexema().equals(";")){
@@ -696,10 +718,13 @@ public class TokensReader {
         } else if(this.token.getCodigo().equals("IDE")){
                 expression(symbol);
         } else if(this.token.getCodigo().equals("CDC")){
-                if(symbol.getType().equals("string")){
-                    setSemanticError("Tipo incompatível atribuição de valor do tipo string a uma variavel de tipo "
-                            + symbol.getType() + " na linha " +  symbol.getLine());
+                if(symbol.getType() != null){
+                    if(!symbol.getType().equals("string")){
+                        setSemanticError("Tipo incompatível atribuição de valor do tipo string a uma variavel de tipo "
+                                + symbol.getType() + " na linha " +  symbol.getLine());
+                    }
                 }
+                
                 next();
         }
         
@@ -790,16 +815,25 @@ public class TokensReader {
                 }
             }
             paths(symbol);
-            
-            
         }
     }
     
     private void final_value(String operation, int line){
+        String t = this.type;
         
         if(this.token.getLexema().equals("-")){
             next();
             if(this.token.getCodigo().equals("NRO")){
+                if(this.semantics.checkTypes("int", token)){
+                    t = "int";
+                } else {
+                    t = "real";
+                }
+                
+                if(!this.isExpression){
+                    this.type = t;
+                }
+                
                 if(operation.equals("negation")){
                     setSemanticError("Erro operação invalida para tipo real/inteiro na linha " + line);
                 }
@@ -807,6 +841,16 @@ public class TokensReader {
             } 
         } else 
             if(this.token.getCodigo().equals("NRO")){
+                if(this.semantics.checkTypes("int", token)){
+                    t = "int";
+                } else {
+                    t = "real";
+                }
+                
+                if(!this.isExpression){
+                    this.type = t;
+                }
+                
                 if(operation.equals("negation")){
                     setSemanticError("Erro operação invalida para tipo real/inteiro na linha " + line);
                 }
@@ -823,11 +867,10 @@ public class TokensReader {
     
     private void commands_exp(){
         this.type = "undefined";
+        this.isExpression = false;
         int line = this.token.getLine();
         
-        logical_exp();
-        
-        System.out.print(this.type + "\n");
+        logical_exp();        
         
         if(!this.type.equals("boolean")){
             setSemanticError("Tipo incompátivel para expressão em comandos if e while na linha " + line);
@@ -836,6 +879,9 @@ public class TokensReader {
     
     private void expression(Simbolo symbol) {
         this.type = "undefined";
+        this.isExpression = false;
+        
+        System.out.print(symbol.getType() + "\n");
         
         aritmetic_exp();
         if(scan.isRelationalOpStronger(this.token.getLexema()) || scan.isRelationalOpWeaker(this.token.getLexema())){
@@ -844,6 +890,21 @@ public class TokensReader {
                 logical_exp();
             }
         }
+        
+        if(symbol.getType() != null){
+            if(this.type.equals("int")){
+                if(symbol.getType().equals("boolean")){
+                    setSemanticError("Valor inválido para atribuição de variável ou retorno "
+                            + "função de tipo " + symbol.getType() + " na linha " + symbol.getLine());
+                }
+            } else 
+                if(!symbol.getType().equals(this.type)){
+                setSemanticError("Valor inválido para atribuição de variável ou retorno "
+                        + "função de tipo " + symbol.getType() + " na linha " + symbol.getLine());
+            }
+        }
+        
+        System.out.print(symbol.getType() + this.type + "\n");
     }
     
     private void logical_exp(){
@@ -903,6 +964,7 @@ public class TokensReader {
     private void op_times_div(){
         
         if(scan.isTimesDiv(this.token.getLexema())){
+            this.isExpression = true;
             if(!this.type.equals("int") && !this.type.equals("real")){
                 this.type = "int";
             }
@@ -915,6 +977,7 @@ public class TokensReader {
     private void op_sum(){
         
         if(scan.isPlusMinus(this.token.getLexema())){
+            this.isExpression = true;
             if(!this.type.equals("int") && !this.type.equals("real")){
                 this.type = "int";
             }
@@ -927,6 +990,7 @@ public class TokensReader {
     private void inequal_exp(){
         
         if(scan.isRelationalOpStronger(this.token.getLexema())){
+            this.isExpression = true;
             this.type = "boolean";
             next();
             aritmetic_exp();
@@ -938,6 +1002,7 @@ public class TokensReader {
         
         if(scan.isRelationalOpWeaker(this.token.getLexema())){
             this.type = "boolean";
+            this.isExpression = true;
             next();
             aritmetic_exp();
             inequal_exp();
@@ -948,12 +1013,14 @@ public class TokensReader {
     private void opt_relational_exp(){
         
         if(scan.isRelationalOpStronger(this.token.getLexema())){
+            this.isExpression = true;
             this.type = "boolean";
             next();
             aritmetic_exp();
             inequal_exp();
             equal_exp();
         } else if(scan.isRelationalOpWeaker(this.token.getLexema())){
+            this.isExpression = true;
             this.type = "boolean";
             next();
             aritmetic_exp();
@@ -964,6 +1031,7 @@ public class TokensReader {
     private void opt_logical_exp(){
         
         if(scan.isLogicalOp(this.token.getLexema())){
+            this.isExpression = true;
             this.type = "boolean";
             next();
             logical_exp();
@@ -1235,6 +1303,9 @@ public class TokensReader {
                     setSemanticError("Variável " + symbol.getId()+ " na linha " + symbol.getLine() + " não foi declarada!");
                 } else {
                     symbol.setType(this.tabela_local_varibles.findById(symbol).getType());
+                    if(!this.isExpression){
+                        this.type = symbol.getType();
+                    }
                 }
             }
             
@@ -1244,12 +1315,18 @@ public class TokensReader {
                         setSemanticError("Constante " + symbol.getId()+ " na linha " + symbol.getLine() + " não foi declarada!");
                     } else {
                         symbol.setType(this.tabela_constants.findById(symbol).getType());
+                        if(!this.isExpression){
+                            this.type = symbol.getType();
+                        }
                     }
                 } else {
                     if(!this.tabela_variables.contem(symbol)){
                         setSemanticError("Variável " + symbol.getId()+ " na linha " + symbol.getLine() + " não foi declarada!");
                     } else {
                         symbol.setType(this.tabela_variables.findById(symbol).getType());
+                        if(!this.isExpression){
+                            this.type = symbol.getType();
+                        }
                     }
                 }
             }

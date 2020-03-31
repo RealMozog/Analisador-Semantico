@@ -202,15 +202,15 @@ public class Simbolo {
     public String toString() {
         return "Simbolo{" + "id=" + id + ", extends_id=" + extends_id + ", line=" + line + ", array_dimensions=" + array_dimensions + ", array_lenght=" + array_lenght + ", scope=" + scope + ", category=" + category + ", type=" + type + ", struct_id=" + struct_id + ", read=" + read + ", value=" + value + ", parameters=" + parameters + '}';
     }
-
+    
     @Override
     public int hashCode() {
-        int hash = 5;
-        hash = 79 * hash + Objects.hashCode(this.id);
-        hash = 79 * hash + Objects.hashCode(this.scope);
-        hash = 79 * hash + Objects.hashCode(this.parameters);
-        hash = 79 * hash + Objects.hashCode(this.category);
-        hash = 79 * hash + Objects.hashCode(this.struct_id);
+        int hash = 7;
+        hash = 29 * hash + Objects.hashCode(this.id);
+        hash = 29 * hash + Objects.hashCode(this.scope);
+        // hash = 29 * hash + Objects.hashCode(this.category);
+        hash = 29 * hash + Objects.hashCode(this.struct_id);
+        hash = 29 * hash + Objects.hashCode(this.parameters);
         return hash;
     }
 
@@ -238,4 +238,6 @@ public class Simbolo {
         }
         return false;
     }
+
+    
 }
