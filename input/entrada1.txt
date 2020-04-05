@@ -64,6 +64,12 @@ struct inteiro extends j {
         return a;
 }
 
+fuction int start (){
+	var {
+		
+	}
+}
+
 procedure addNum(real a){
     var {}   
     a = a + 20;

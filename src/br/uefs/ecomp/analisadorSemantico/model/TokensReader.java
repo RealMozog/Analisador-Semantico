@@ -17,7 +17,7 @@ public class TokensReader {
     AnaliseSemantica semantics;
     TabelaDeSimbolos tabela_variables;
     TabelaDeSimbolos tabela_constants;
-    TabelaDeSimbolos tabela_local_varibles;
+    TabelaDeSimbolos tabela_local_variables;
     TabelaDeSimbolos tabela_structs;
     TabelaDeSimbolos tabela_functions;
     TabelaDeSimbolos tabela_call_functions;
@@ -44,7 +44,7 @@ public class TokensReader {
         this.token = this.arq.next();
         this.semantics = new AnaliseSemantica();
         this.tabela_variables = new TabelaDeSimbolos();
-        this.tabela_local_varibles = new TabelaDeSimbolos();
+        this.tabela_local_variables = new TabelaDeSimbolos();
         this.tabela_constants = new TabelaDeSimbolos();
         this.tabela_structs = new TabelaDeSimbolos();
         this.tabela_functions = new TabelaDeSimbolos();
@@ -53,11 +53,6 @@ public class TokensReader {
 
     public ErrorList getSemanticErrors() {
         return semanticErrors;
-    }
-    
-    private void setErro(int line, String expected, String found){
-        Error erro = new Error(line, expected, found); 
-        this.erroList.addErro(erro);
     }
     
     private void setSemanticError(String erro){
@@ -92,6 +87,20 @@ public class TokensReader {
         }
     }
     
+    private void checkForProcedureStart(){
+        boolean hasStart = false;
+        
+        for (Simbolo function : this.tabela_functions.pegaTodos()){
+            if(function.getType() == null && function.getId().equals("start")){
+                hasStart = !hasStart;
+            }
+        }
+        
+        if(!hasStart){
+            setSemanticError("Programa não contém o procedimento start()");
+        }
+    }
+    
     public ErrorList stateZero() {
         if(this.arq.hasNext()){
             global_values(_scope.GLOBAL.toString());
@@ -113,43 +122,28 @@ public class TokensReader {
                         }
                         function.setType(this.token.getLexema());
                         next();
-                    } else {
-                        setErro(this.token.getLine(), "Type or typedef", this.token.getLexema());
-                        while(!this.token.getCodigo().equals("IDE")){
-                            next();
-                            if(!this.arq.hasNext()){
-                                break;
-                            }
-                        }
                     }
 
                     if(this.token.getCodigo().equals("IDE")){
                         function.setId(this.token.getLexema());
                         function.setLine(this.token.getLine());
                         
-                        if(this.tabela_structs.findById(type_struct) != null){
+                        if(this.tabela_structs.findById(type_struct) == null){
                             setSemanticError("Struct " + type_struct.getId() + " do retorno da função " + function.getId()
                                      + " na linha " + type_struct.getLine() +" não declarada!");
                         }
                         
                         next();
-                    } else {
-                        setErro(this.token.getLine(), "Identifier", this.token.getLexema());
-                        panicState("(");
                     }
 
                     function_procedure(function);
                     _return(function);
                     
-                    this.tabela_local_varibles.removeAll();
+                    this.tabela_local_variables.removeAll();
+                    this.tabela_structs.removeSymbolsByScope("LOCAL");
 
                     if(this.token.getLexema().equals("}")){
                         next();
-                    } else {
-                        setErro(this.token.getLine(), "Delimitator:\"}", this.token.getLexema());
-                        while(arq.hasNext()){
-                            next();
-                        }
                     }
                 }
                 
@@ -163,27 +157,21 @@ public class TokensReader {
                         procedure.setId(this.token.getLexema());
                         procedure.setLine(this.token.getLine());
                         next();
-                    } else {
-                        setErro(this.token.getLine(), "Identifier or reserverd word: \"start", this.token.getLexema());
-                        panicState("(");
                     }
 
                     function_procedure(procedure);
                     
-                    this.tabela_local_varibles.removeAll();
+                    this.tabela_local_variables.removeAll();
+                    this.tabela_structs.removeSymbolsByScope("LOCAL");
 
                     if(this.token.getLexema().equals("}")){
                        next();
-                    } else {
-                        setErro(this.token.getLine(), "Delimitator:\"}", this.token.getLexema());
-                        while(arq.hasNext()){
-                            next();
-                        }
                     }
                 }
             } 
             
             checkFunctionsCalls();
+            checkForProcedureStart();
         }
         
         return this.erroList;
@@ -198,45 +186,20 @@ public class TokensReader {
             next();
             if(this.token.getLexema().equals("{")){
                 next();
-            } else {
-                setErro(this.token.getLine(), "Delimitator:\"{", this.token.getLexema());
-                while(!scan.isType(this.token.getLexema()) && !this.token.getCodigo().equals("IDE")
-                        && !this.token.getLexema().equals("typedef") && !this.token.getLexema().equals("struct")
-                        && !this.token.getLexema().equals("}")){
-                    if(!this.arq.hasNext()){
-                        break;
-                    }
-                    next();
-                }
             }
             
             var_values_declaration(scope, symbol);
             
             if(this.token.getLexema().equals("}")){
                 next();
-            } else {
-                setErro(this.token.getLine(), "Delimitator:\"}", this.token.getLexema());
-                panicState("const");
             }
             
             if(this.token.getLexema().equals("const")){
                 next();
-            } else {
-                setErro(this.token.getLine(), "Reserved word: \"const", this.token.getLexema());
-                panicState("{");
             }
             
             if(this.token.getLexema().equals("{")){
                 next();
-            } else {
-                setErro(this.token.getLine(), "Delimitator:\"{", this.token.getLexema());
-                while(!scan.isType(this.token.getLexema()) && !this.token.getCodigo().equals("IDE")
-                        && !this.token.getLexema().equals("}")){
-                    if(!this.arq.hasNext()){
-                        break;
-                    }
-                    next();
-                }
             }
 
             Simbolo const_s = new Simbolo();
@@ -245,14 +208,6 @@ public class TokensReader {
             
             if(this.token.getLexema().equals("}")){
                 next();
-            } else {
-                setErro(this.token.getLine(), "Delimitator:\"}", this.token.getLexema());
-                while(!this.token.getLexema().equals("function") && !this.token.getLexema().equals("procedure")){
-                    if(!this.arq.hasNext()){
-                        break;
-                    }
-                    next();
-                }
             }
         }
         
@@ -260,45 +215,20 @@ public class TokensReader {
             next();
             if(this.token.getLexema().equals("{")){
                 next();
-            } else {
-                setErro(this.token.getLine(), "Delimitator:\"{", this.token.getLexema());
-                while(!scan.isType(this.token.getLexema()) && !this.token.getCodigo().equals("IDE")
-                        && !this.token.getLexema().equals("}")){
-                    if(!this.arq.hasNext()){
-                        break;
-                    }
-                    next();
-                }
             }
             
             const_values_declaration(scope, symbol);
             
             if(this.token.getLexema().equals("}")){
                 next();
-            } else {
-                setErro(this.token.getLine(), "Delimitator:\"}", this.token.getLexema());
-                panicState("var");
             }
             
             if(this.token.getLexema().equals("var")){
                 next();
-            } else {
-                setErro(this.token.getLine(), "reserved word: \"var", this.token.getLexema());
-                panicState("{");
             }
             
             if(this.token.getLexema().equals("{")){
                 next();
-            } else {
-                setErro(this.token.getLine(), "Delimitator:\"{", this.token.getLexema());
-                while(!scan.isType(this.token.getLexema()) && !this.token.getCodigo().equals("IDE")
-                        && !this.token.getLexema().equals("typedef") && !this.token.getLexema().equals("struct")
-                        && !this.token.getLexema().equals("}")){
-                    if(!this.arq.hasNext()){
-                        break;
-                    }
-                    next();
-                }
             }
 
             Simbolo var_s = new Simbolo();
@@ -307,14 +237,6 @@ public class TokensReader {
             
             if(this.token.getLexema().equals("}")){
                 next();
-            } else {
-                setErro(this.token.getLine(), "Delimitator:\"}", this.token.getLexema());
-                while(!this.token.getLexema().equals("function") && !this.token.getLexema().equals("procedure")){
-                    if(!this.arq.hasNext()){
-                        break;
-                    }
-                    next();
-                }
             }
         }
     }
@@ -338,16 +260,6 @@ public class TokensReader {
             var_more_atribuition(s_more_var);
             if(this.token.getLexema().equals(";")){
                 next();
-            } else {
-                setErro(this.token.getLine(), "Delimitator:\";", this.token.getLexema());
-                while(!scan.isType(this.token.getLexema()) && !this.token.getCodigo().equals("IDE")
-                        && !this.token.getLexema().equals("typedef") && !this.token.getLexema().equals("struct")
-                        && !this.token.getLexema().equals("}")){
-                    if(!this.arq.hasNext()){
-                        break;
-                    }
-                    next();
-                }
             }
             
             Simbolo s_var = new Simbolo();
@@ -361,14 +273,6 @@ public class TokensReader {
             next();
             if(this.token.getLexema().equals("struct")){
                 next();
-            } else {
-                setErro(this.token.getLine(), "Reserved word: \"struct", this.token.getLexema());
-                while(!this.token.getCodigo().equals("IDE")){
-                    if(!this.arq.hasNext()){
-                        break;
-                    }
-                    next();
-                }
             }
             
             IDE_struct(scope, symbol);
@@ -398,9 +302,6 @@ public class TokensReader {
             symbol.setId(this.token.getLexema());
             symbol.setLine(this.token.getLine());
             next();
-        } else {
-            setErro(this.token.getLine(), "Identifier", this.token.getLexema());
-            panicState("{");
         }
         
         IDE_struct_2(scope, symbol);
@@ -426,38 +327,19 @@ public class TokensReader {
                 
                 symbol_struct.setExtends_id(this.token.getLexema());
                 next();
-            } else {
-                setErro(this.token.getLine(), "Identifier", this.token.getLexema());
-                panicState("{");
             }
         }
         
         if(this.token.getLexema().equals("{")){
             next();
-        } else {
-            setErro(this.token.getLine(), "Delimitator:\"{", this.token.getLexema());
-            panicState("var");
         }
         
         if(this.token.getLexema().equals("var")){
             next();
-        } else {
-            setErro(this.token.getLine(), "Reserved word: \"var", this.token.getLexema());
-            panicState("{");
         }
         
         if(this.token.getLexema().equals("{")){
             next();
-        } else {
-            setErro(this.token.getLine(), "Delimitator:\"{", this.token.getLexema());
-            while(!scan.isType(this.token.getLexema()) && !this.token.getCodigo().equals("IDE")
-                    && !this.token.getLexema().equals("typedef") && !this.token.getLexema().equals("struct")
-                    && !this.token.getLexema().equals("}")){
-                if(!this.arq.hasNext()){
-                    break;
-                }
-                next();
-            }
         }
         
         Simbolo struct_var_symbol = new Simbolo();
@@ -467,23 +349,10 @@ public class TokensReader {
         
         if(this.token.getLexema().equals("}")){
             next();
-        } else {
-            setErro(this.token.getLine(), "Delimitator:\"}", this.token.getLexema());
-            panicState("}");
         }
 
         if(this.token.getLexema().equals("}")){
             next();
-        } else {
-            setErro(this.token.getLine(), "Delimitator:\"}", this.token.getLexema());
-            while(!scan.isType(this.token.getLexema()) && !this.token.getCodigo().equals("IDE")
-                    && !this.token.getLexema().equals("typedef") && !this.token.getLexema().equals("struct")
-                    && !this.token.getLexema().equals("}")){
-                if(!this.arq.hasNext()){
-                    break;
-                }
-                next();
-            }
         }
         
         if(!this.tabela_structs.contem(symbol_struct)){
@@ -503,17 +372,6 @@ public class TokensReader {
             symbol.setId(this.token.getLexema());
             symbol.setLine(this.token.getLine());
             next();
-        } else {
-            setErro(this.token.getLine(), "Identifier", this.token.getLexema());
-            while(!scan.isType(this.token.getLexema()) && !this.token.getCodigo().equals("IDE")
-                    && !this.token.getLexema().equals("typedef") && !this.token.getLexema().equals("struct")
-                    && !this.token.getLexema().equals("}") && !this.token.getLexema().equals("[")
-                    && !this.token.getLexema().equals(";")){
-                if(!this.arq.hasNext()){
-                    break;
-                }
-                next();
-            }
         }
         array_verification(symbol);
         
@@ -525,8 +383,8 @@ public class TokensReader {
                     setSemanticError("Variavel " + symbol.getId()+ " na linha " + symbol.getLine() + " já declarada!");
                 }
             } else {
-                if(!this.tabela_local_varibles.contem(symbol)){
-                    this.tabela_local_varibles.addElement(symbol);
+                if(!this.tabela_local_variables.contem(symbol)){
+                    this.tabela_local_variables.addElement(symbol);
                 } else {
                     setSemanticError("Variavel " + symbol.getId()+ " na linha " + symbol.getLine() + " já declarada!");
                 }
@@ -546,10 +404,7 @@ public class TokensReader {
                     setSemanticError("Valor inválido para tamanho de vetores na linha "+ symbol.getLine());
                 }
                 next();
-            } else {
-                setErro(this.token.getLine(), "Number", this.token.getLexema());
-                panicState("]");
-            } 
+            }
             
             if(this.token.getLexema().equals("]")){
                 next();
@@ -595,15 +450,6 @@ public class TokensReader {
             
             if(this.token.getLexema().equals(";")){
                 next();
-            } else {
-                setErro(this.token.getLine(), "Delimitator: \";", this.token.getLexema());
-                while(!scan.isType(this.token.getLexema()) && !this.token.getCodigo().equals("IDE")
-                        && !this.token.getLexema().equals("}")){
-                    if(!this.arq.hasNext()){
-                        break;
-                    }
-                    next();
-                }
             }
             
             Simbolo new_const = new Simbolo();
@@ -617,22 +463,10 @@ public class TokensReader {
             symbol.setId(this.token.getLexema());
             symbol.setLine(this.token.getLine());
             next();
-        } else {
-            setErro(this.token.getLine(), "Identifier", this.token.getLexema());
-            panicState("=");
         }
         
         if(this.token.getLexema().equals("=")){
             next();
-        } else {
-            setErro(this.token.getLine(), "Operator: \"=", this.token.getLexema());
-            while(!this.token.getCodigo().equals("NRO") && !this.token.getCodigo().equals("CDC")
-                    && scan.isBooleans(this.token.getLexema())){
-                if(!this.arq.hasNext()){
-                    break;
-                }
-                next();
-            }
         }
         
         value_const(symbol);
@@ -662,13 +496,7 @@ public class TokensReader {
                         + symbol.getId() + " de tipo " + symbol.getType());
                     }
                     next();
-                } else {
-                    setErro(this.token.getLine(), "Number", this.token.getLexema());
-                    panicState(";");
                 }
-        } else {
-            setErro(this.token.getLine(), "Number, string, boolean", this.token.getLexema());
-            panicState(";");
         }
         
         if(!this.tabela_constants.contem(symbol)){
@@ -697,23 +525,12 @@ public class TokensReader {
         
         if(this.token.getLexema().equals("(")){
             next();
-        } else {
-            setErro(this.token.getLine(), "Delimitator:\"(", this.token.getLexema());
-            while(!scan.isType(this.token.getLexema()) && !this.token.getCodigo().equals("IDE")){
-                if(!this.arq.hasNext()){
-                    break;
-                }
-                next();                
-            }
         }
         
         params_list(function);
         
         if(this.token.getLexema().equals(")")){
             next();
-        } else {
-            setErro(this.token.getLine(), "Delimitator:\")", this.token.getLexema());
-            panicState("{");
         }
         
         if(!this.tabela_functions.contem(function)){
@@ -724,16 +541,10 @@ public class TokensReader {
         
         if(this.token.getLexema().equals("{")){
             next();
-        } else {
-            setErro(this.token.getLine(), "Delimitator:\"{", this.token.getLexema());
-            panicState("var");
         }
         
         if(this.token.getLexema().equals("var")) {
             next();
-        } else {
-            setErro(this.token.getLine(), "Reserved word: \"var", this.token.getLexema());
-            panicState("{");
         }
         
         var_fuctions_procedures(_scope.LOCAL.toString());
@@ -771,17 +582,9 @@ public class TokensReader {
             if(this.token.getCodigo().equals("IDE")){
                 param.setScope(_scope.LOCAL.toString());
                 param.setId(this.token.getLexema());
-                this.tabela_local_varibles.addElement(param);
+                this.tabela_local_variables.addElement(param);
                 symbol.addParam(type, this.token.getLexema());
                 next();
-            } else {
-                setErro(this.token.getLine(), "Identifier", this.token.getLexema());
-                while(!this.token.getLexema().equals(",") && !this.token.getLexema().equals(")")){
-                    if(!this.arq.hasNext()){
-                        break;
-                    }
-                    next();
-                }
             }
 
             more_params(symbol);
@@ -801,15 +604,6 @@ public class TokensReader {
         
         if(this.token.getLexema().equals("{")){ 
             next();
-        } else {
-            setErro(this.token.getLine(), "Delimitator: \"{", this.token.getLexema());
-            while(!scan.isType(this.token.getLexema()) && !this.token.getLexema().equals("struct")
-                    && !this.token.getLexema().equals("typedef") && !this.token.getLexema().equals("}")){
-                if(!this.arq.hasNext()){
-                    break;
-                }
-                next();
-            }
         }
         
         Simbolo symbol = new Simbolo();
@@ -818,15 +612,6 @@ public class TokensReader {
         
         if(this.token.getLexema().equals("}")){
             next();
-        } else {
-            setErro(this.token.getLine(), "Delimitator: \"}", this.token.getLexema());
-            while(!scan.isCommands(this.token.getLexema()) && !this.token.getCodigo().equals("IDE")
-                    && !this.token.getLexema().equals("return") && !this.token.getLexema().equals("}")){
-                if(!this.arq.hasNext()){
-                    break;
-                }
-                next();
-            }
         }
     }
     
@@ -856,15 +641,6 @@ public class TokensReader {
             unary_operation();
             if(token.getLexema().equals(";")){
                 next();
-            } else {
-                setErro(this.token.getLine(), "Delimitator: \";", this.token.getLexema());
-                while(!scan.isCommands(this.token.getLexema()) && !this.token.getCodigo().equals("IDE")
-                        && !this.token.getLexema().equals("return") && !this.token.getLexema().equals("}")){
-                    if(!this.arq.hasNext()){
-                        break;
-                    }
-                    next();
-                }
             }
         }
         
@@ -879,15 +655,6 @@ public class TokensReader {
                 call_procedure_function(call);
                 if(this.token.getLexema().equals(";")){
                     next();
-                } else {
-                    setErro(this.token.getLine(), "Delimitator: \";", this.token.getLexema());
-                    while(!scan.isCommands(this.token.getLexema()) && !this.token.getCodigo().equals("IDE")
-                            && !this.token.getLexema().equals("return") && !this.token.getLexema().equals("}")){
-                        if(!this.arq.hasNext()){
-                            break;
-                        }
-                        next();
-                    }
                 }
             } else {
                 call.setCategory(category.VARIABLE.toString());
@@ -895,7 +662,7 @@ public class TokensReader {
                 
                 paths(call);
                 
-                if(!this.tabela_local_varibles.contem(call)){
+                if(!this.tabela_local_variables.contem(call)){
                     call.setScope(_scope.GLOBAL.toString());
                     if(!this.tabela_variables.contem(call)){
                         if(this.tabela_constants.contem(call)){
@@ -910,38 +677,18 @@ public class TokensReader {
                     }
                     
                 } else {
-                    call.setType(this.tabela_local_varibles.findById(call).getType());
+                    call.setType(this.tabela_local_variables.findById(call).getType());
                 }
                 
                 if(scan.isUnaryOp(this.token.getLexema())){
                     next();
                     if(this.token.getLexema().equals(";")){
                         next();
-                    } else {
-                        setErro(this.token.getLine(), "Delimitator: \";", this.token.getLexema());
-                        while(!scan.isCommands(this.token.getLexema()) && !this.token.getCodigo().equals("IDE")
-                                && !this.token.getLexema().equals("return") && !this.token.getLexema().equals("}")
-                                && !scan.isModifiers(this.token.getLexema())){
-                            if(!this.arq.hasNext()){
-                                break;
-                            }
-                            next();
-                        }
                     }
                 } else {
                     if(this.token.getLexema().equals("=")){
                         next();
                         assing(call);
-                    } else {
-                        setErro(this.token.getLine(), "Attribuition Operator: \"=", this.token.getLexema());
-                        while(!this.token.getCodigo().equals("NRO") && !scan.isModifiers(this.token.getLexema())
-                                && this.token.getCodigo().equals("IDE") && !this.token.getLexema().equals("-")
-                                && this.token.getCodigo().equals("CDC")){
-                            if(!this.arq.hasNext()){
-                                break;
-                            }
-                            next();
-                        }
                     }
                 } 
             }
@@ -964,24 +711,10 @@ public class TokensReader {
                     }
                 }
                 next();
-        } else {
-            setErro(this.token.getLine(), "Number, string, boolean, variable, function, procedure"
-                    + ", unary operation", this.token.getLexema());
-            panicState(";");
         }
         
         if(this.token.getLexema().equals(";")){
             next();
-        } else {
-            setErro(this.token.getLine(), "Delimitator: \";", this.token.getLexema());
-            while(!scan.isCommands(this.token.getLexema()) && !this.token.getCodigo().equals("IDE")
-                    && !this.token.getLexema().equals("return") && !this.token.getLexema().equals("}")
-                    && !scan.isModifiers(this.token.getLexema())){
-                if(!this.arq.hasNext()){
-                    break;
-                }
-                next();
-            }
         }
         
         commands();
@@ -998,17 +731,6 @@ public class TokensReader {
             next();
             if(scan.isModifiers(this.token.getLexema()) || this.token.getCodigo().equals("IDE")){
                 variable(variable);
-            } else {
-                setErro(this.token.getLine(), "Variable", this.token.getLexema());
-                while(!scan.isCommands(this.token.getLexema()) && !this.token.getCodigo().equals("IDE")
-                        && !this.token.getLexema().equals("return") && !this.token.getLexema().equals("}")
-                        && !scan.isModifiers(this.token.getLexema()) && !this.token.getLexema().equals(";")
-                        && !scan.isNoLogicalOperators(this.token.getLexema())){
-                    if(!this.arq.hasNext()){
-                        break;
-                    }
-                    next();
-                }
             }
         } else 
             if(this.token.getLexema().equals("!")){
@@ -1017,17 +739,6 @@ public class TokensReader {
                 next();
                 if(scan.isModifiers(this.token.getLexema()) || this.token.getCodigo().equals("IDE")){
                     variable(variable);
-                } else {
-                    setErro(this.token.getLine(), "Variable", this.token.getLexema());
-                    while(!scan.isCommands(this.token.getLexema()) && !this.token.getCodigo().equals("IDE")
-                            && !this.token.getLexema().equals("return") && !this.token.getLexema().equals("}")
-                            && !scan.isModifiers(this.token.getLexema()) && !this.token.getLexema().equals(";")
-                            && !scan.isNoLogicalOperators(this.token.getLexema())){
-                        if(!this.arq.hasNext()){
-                            break;
-                        }
-                        next();
-                    }
                 }
         } else 
             if(scan.isModifiers(this.token.getLexema()) || this.token.getCodigo().equals("IDE")){
@@ -1061,8 +772,8 @@ public class TokensReader {
                 symbol.setScope(_scope.GLOBAL.toString());
                     call_procedure_function(symbol);
             } else {
-                if(this.tabela_local_varibles.contem(symbol)){
-                    symbol.setType(this.tabela_local_varibles.findById(symbol).getType());
+                if(this.tabela_local_variables.contem(symbol)){
+                    symbol.setType(this.tabela_local_variables.findById(symbol).getType());
                     //this.type = symbol.getType();
                 } else {
                     if(symbol.getStruct_id() == null){
@@ -1112,15 +823,6 @@ public class TokensReader {
                     setSemanticError("Erro operação invalida para tipo real/inteiro na linha " + line);
                 }
                 next();
-            } else {
-                setErro(this.token.getLine(), "Number", this.token.getLexema());
-                while(!scan.isOperators(this.token.getLexema()) && !this.token.getLexema().equals(";")
-                        && !this.token.getLexema().equals(")") && !scan.isUnaryOp(this.token.getLexema())){
-                    if(!this.arq.hasNext()){
-                        break;
-                    }
-                    next();
-                }
             }
         } else 
             if(this.token.getCodigo().equals("NRO")){
@@ -1145,16 +847,6 @@ public class TokensReader {
                     setSemanticError("Erro operação invalida para tipo booleano na linha " + line);
                 }
                 next();
-        } else {
-            setErro(this.token.getLine(), "number, boolean", this.token.getLexema());
-            while(!scan.isOperators(this.token.getLexema()) && !this.token.getLexema().equals(";")
-                    && !this.token.getLexema().equals(")") && !this.token.getLexema().equals(".")
-                    && !this.token.getLexema().equals("[") && !scan.isUnaryOp(this.token.getLexema())){
-                if(!this.arq.hasNext()){
-                    break;
-                }
-                next();
-            }
         }
     }
     
@@ -1172,6 +864,7 @@ public class TokensReader {
     
     private void expression(Simbolo symbol) {
         this.type = "undefined";
+        int line = this.token.getLine();
         this.isExpression = false;
         
         aritmetic_exp();
@@ -1186,12 +879,12 @@ public class TokensReader {
             if(this.type.equals("int")){
                 if(symbol.getType().equals("boolean")){
                     setSemanticError("Valor inválido para atribuição de variável ou retorno "
-                            + "função de tipo " + symbol.getType() + " na linha " + symbol.getLine());
+                            + "função de tipo " + symbol.getType() + " na linha " + line);
                 }
             } else 
                 if(!symbol.getType().equals(this.type)){
                 setSemanticError("Valor inválido para atribuição de variável ou retorno "
-                        + "função de tipo " + symbol.getType() + " na linha " + symbol.getLine());
+                        + "função de tipo " + symbol.getType() + " na linha " + line);
             }
         }
     }
@@ -1209,15 +902,6 @@ public class TokensReader {
             logical_exp();
             if(this.token.getLexema().equals(")")){
                 next();
-            } else {
-                setErro(this.token.getLine(), "Delimitator: \")", this.token.getLexema());
-                while(!scan.isLogicalOp(this.token.getLexema()) && !this.token.getLexema().equals(")")
-                        && !this.token.getLexema().equals(";")){
-                    if(!this.arq.hasNext()){
-                        break;
-                    }
-                    next();
-                }
             }
         } else {
             aritmetic_exp();
@@ -1232,14 +916,6 @@ public class TokensReader {
             relational_exp();
             if(this.token.getLexema().equals(")")){
                 next();
-            } else {
-                setErro(this.token.getLine(), "Delimitator: \")", this.token.getLexema());
-                while(!scan.isRelationalOpStronger(this.token.getLexema()) && !scan.isRelationalOpWeaker(this.token.getLexema())){
-                    if(!this.arq.hasNext()){
-                        break;
-                    }
-                    next();
-                }
             }
         } else {
             operation();
@@ -1260,15 +936,6 @@ public class TokensReader {
             aritmetic_exp();
             if(this.token.getLexema().equals(")")){
                 next();
-            } else {
-                setErro(this.token.getLine(), "Delimitator: \")", this.token.getLexema());
-                while(!scan.isRelationalOpStronger(this.token.getLexema()) && !scan.isRelationalOpWeaker(this.token.getLexema())
-                        && !scan.isPlusMinus(this.token.getLexema()) && !scan.isTimesDiv(this.token.getLexema())){
-                    if(!this.arq.hasNext()){
-                        break;
-                    }
-                    next();
-                }
             }
         } else {
             unary_operation();
@@ -1340,17 +1007,6 @@ public class TokensReader {
             next();
             aritmetic_exp();
             inequal_exp();
-        } else {
-            setErro(this.token.getLine(), "Relational Operators", this.token.getLexema());
-            while(!this.token.getLexema().equals("(") && !scan.isUnaryOp(this.token.getLexema())
-                    && !scan.isModifiers(this.token.getLexema()) && !this.token.getCodigo().equals("IDE")
-                    && !this.token.getLexema().equals("-") && !scan.isBooleans(this.token.getLexema())
-                    && !this.token.getCodigo().equals("NRO")){
-                if(!this.arq.hasNext()){
-                    break;
-                }
-                next();
-            }
         }
     }
     
@@ -1368,25 +1024,12 @@ public class TokensReader {
         
         if(this.token.getLexema().equals("(")){
             next();
-        } else {
-            setErro(this.token.getLine(), "Delimitator: \"(", this.token.getLexema());
-            while(!this.token.getCodigo().equals("NRO") && !this.token.getCodigo().equals("CDC")
-                    && !scan.isBooleans(this.token.getLexema()) && !scan.isModifiers(this.token.getLexema())
-                    && !this.token.getLexema().equals("-")){
-                if(!this.arq.hasNext()){
-                    break;
-                }
-                next();
-            }
         }
         
         realParams(symbol);
         
         if(this.token.getLexema().equals(")")){
             next();
-        } else {
-            setErro(this.token.getLine(), "Delimitator: \")", this.token.getLexema());
-            panicState(";");
         }
         
         commands();
@@ -1415,9 +1058,6 @@ public class TokensReader {
                             symbol.addParam("real", null);
                         }
                         next();
-                    } else {
-                        setErro(this.token.getLine(), "Number", this.token.getLexema());
-                        panicState(",");
                     }
             } else 
                 if(this.token.getCodigo().equals("CDC")){
@@ -1450,9 +1090,6 @@ public class TokensReader {
                 || scan.isBooleans(this.token.getLexema()) || scan.isModifiers(this.token.getLexema())
                 || this.token.getLexema().equals("-") || this.token.getCodigo().equals("IDE")){
                 realParam(symbol);
-            } else {
-                setErro(this.token.getLine(), "Number, string, boolean, variable", this.token.getLexema());
-                panicState(",");
             }
             more_real_params(symbol);
         }
@@ -1462,37 +1099,16 @@ public class TokensReader {
         
         if(this.token.getLexema().equals("(")){
             next();
-        } else {
-            setErro(this.token.getLine(), "Delimitator: \"(", this.token.getLexema());
-            while(!scan.isModifiers(this.token.getLexema()) && !this.token.getCodigo().equals("IDE")
-                    && !this.token.getCodigo().equals("CDC")){
-                if(!this.arq.hasNext()){
-                    break;
-                }
-                next();
-            }
         }
         
         print_params();
         
         if(this.token.getLexema().equals(")")){
             next();
-        } else {
-            setErro(this.token.getLine(), "Delimitator: \")", this.token.getLexema());
-            panicState(";");
         }
         
         if(this.token.getLexema().equals(";")){
             next();
-        } else {
-            setErro(this.token.getLine(), "Delimitator: \";", this.token.getLexema());
-            while(!scan.isCommands(this.token.getLexema()) && !this.token.getCodigo().equals("IDE")
-                    && !this.token.getLexema().equals("return") && !this.token.getLexema().equals("}")){
-                if(!this.arq.hasNext()){
-                    break;
-                }
-                next();
-            }
         }
     }
     
@@ -1510,9 +1126,6 @@ public class TokensReader {
         } else
             if(scan.isModifiers(this.token.getLexema()) || this.token.getCodigo().equals("IDE")){
                 variable(print_param);
-        } else {
-            setErro(this.token.getLine(), "Varible, string", this.token.getLexema());
-            panicState(")");
         }
     }
     
@@ -1528,36 +1141,16 @@ public class TokensReader {
         
         if(this.token.getLexema().equals("(")){
             next();
-        } else {
-            setErro(this.token.getLine(), "Delimitator: \"(", this.token.getLexema());
-            while(!scan.isModifiers(this.token.getLexema()) && !this.token.getCodigo().equals("IDE")){
-                if(!this.arq.hasNext()){
-                    break;
-                }
-                next();
-            }
         }
         
         read_params();
         
         if(this.token.getLexema().equals(")")){
             next();
-        } else {
-            setErro(this.token.getLine(), "Delimitator: \")", this.token.getLexema());
-            panicState(";");
         }
         
         if(this.token.getLexema().equals(";")){
             next();
-        } else {
-            setErro(this.token.getLine(), "Delimitator: \";", this.token.getLexema());
-            while(!scan.isCommands(this.token.getLexema()) && !this.token.getCodigo().equals("IDE")
-                    && !this.token.getLexema().equals("return") && !this.token.getLexema().equals("}")){
-                if(!this.arq.hasNext()){
-                    break;
-                }
-                next();
-            }
         }
     }
     
@@ -1567,9 +1160,6 @@ public class TokensReader {
         if(scan.isModifiers(this.token.getLexema()) || this.token.getCodigo().equals("IDE")){
             variable(read_param);
             more_read_params();
-        } else {
-            setErro(this.token.getLine(), "Variable", this.token.getLexema());
-            panicState(")");     
         }
     }
     
@@ -1585,55 +1175,22 @@ public class TokensReader {
         
         if(this.token.getLexema().equals("(")){
             next();
-        } else {
-            setErro(this.token.getLine(), "Delimitator: \"(", this.token.getLexema());
-            while(!scan.isModifiers(this.token.getLexema()) && !this.token.getCodigo().equals("IDE")
-                    && !this.token.getLexema().equals("-") && !this.token.getCodigo().equals("NRO")
-                    && !scan.isBooleans(this.token.getLexema()) && !scan.isUnaryOp(this.token.getLexema())
-                    && !this.token.getLexema().equals("!")){
-                if(!this.arq.hasNext()){
-                    break;
-                }
-                next();
-            }
         }
         
         commands_exp();
         
         if(this.token.getLexema().equals(")")){
             next();
-        } else {
-            setErro(this.token.getLine(), "Delimitator: \")", this.token.getLexema());
-            panicState("{");
         }
         
         if(this.token.getLexema().equals("{")){
             next();
-        } else {
-            setErro(this.token.getLine(), "Delimitator: \"{", this.token.getLexema());
-            while(!scan.isCommands(this.token.getLexema()) && !this.token.getCodigo().equals("IDE")
-                    && !this.token.getLexema().equals("}") && !scan.isModifiers(this.token.getLexema())){
-                if(!this.arq.hasNext()){
-                    break;
-                }
-                next();
-            }
         }
         
         commands();
         
         if(this.token.getLexema().equals("}")){
             next();
-        } else {
-            setErro(this.token.getLine(), "Delimitator: \"}", this.token.getLexema());
-            while(!scan.isCommands(this.token.getLexema()) && !this.token.getCodigo().equals("IDE")
-                    && !this.token.getLexema().equals("}") && !scan.isModifiers(this.token.getLexema())
-                    && !this.token.getLexema().equals("return")){
-                if(!this.arq.hasNext()){
-                    break;
-                }
-                next();
-            }
         }
     }
     
@@ -1641,62 +1198,26 @@ public class TokensReader {
         
         if(this.token.getLexema().equals("(")){
             next();
-        } else {
-            setErro(this.token.getLine(), "Delimitator: \"(", this.token.getLexema());
-            while(!scan.isModifiers(this.token.getLexema()) && !this.token.getCodigo().equals("IDE")
-                    && !this.token.getLexema().equals("-") && !this.token.getCodigo().equals("NRO")
-                    && !scan.isBooleans(this.token.getLexema()) && !scan.isUnaryOp(this.token.getLexema())
-                    && !this.token.getLexema().equals("!")){
-                if(!this.arq.hasNext()){
-                    break;
-                }
-                next();
-            }
         }
         
         commands_exp();
         
         if(this.token.getLexema().equals(")")){
             next();
-        } else {
-            setErro(this.token.getLine(), "Delimitator: \")", this.token.getLexema());
-            panicState("then");
         }
         
         if(this.token.getLexema().equals("then")){
             next();
-        } else {
-            setErro(this.token.getLine(), "Reserved word: \"then", this.token.getLexema());
-            panicState("{");
         }
         
         if(this.token.getLexema().equals("{")){
             next();
-        } else {
-            setErro(this.token.getLine(), "Delimitator: \"{", this.token.getLexema());
-            while(!scan.isCommands(this.token.getLexema()) && !this.token.getCodigo().equals("IDE")
-                    && !this.token.getLexema().equals("}") && !scan.isModifiers(this.token.getLexema())){
-                if(!this.arq.hasNext()){
-                    break;
-                }
-                next();
-            }
         }
         
         commands();
         
         if(this.token.getLexema().equals("}")){
             next();
-        } else {
-            setErro(this.token.getLine(), "Delimitator: \"}", this.token.getLexema());
-            while(!scan.isCommands(this.token.getLexema()) && !this.token.getCodigo().equals("IDE")
-                    && !this.token.getLexema().equals("}") && !scan.isModifiers(this.token.getLexema())
-                    && !this.token.getLexema().equals("return") && !this.token.getLexema().equals("else")){
-                if(!this.arq.hasNext()){
-                    break;
-                }
-                next();
-            }
         }
         
         elseStatement();
@@ -1708,32 +1229,12 @@ public class TokensReader {
             next();
             if(this.token.getLexema().equals("{")){
                 next();
-            } else {
-                setErro(this.token.getLine(), "Delimitator: \"{", this.token.getLexema());
-                while(!scan.isCommands(this.token.getLexema()) && !this.token.getCodigo().equals("IDE")
-                        && !this.token.getLexema().equals("}") && !scan.isModifiers(this.token.getLexema())
-                        && !this.token.getLexema().equals("return")){
-                    if(!this.arq.hasNext()){
-                        break;
-                    }
-                    next();
-                }
             }
             
             commands();
             
             if(this.token.getLexema().equals("}")){
                 next();
-            } else {
-                setErro(this.token.getLine(), "Delimitator: \"}", this.token.getLexema());
-                while(!scan.isCommands(this.token.getLexema()) && !this.token.getCodigo().equals("IDE")
-                        && !this.token.getLexema().equals("}") && !scan.isModifiers(this.token.getLexema())
-                        && !this.token.getLexema().equals("return")){
-                    if(!this.arq.hasNext()){
-                        break;
-                    }
-                    next();
-                }
             }
         }
     }
@@ -1751,24 +1252,10 @@ public class TokensReader {
             } else {
                 expression(symbol);
             }
-        } else {
-            setErro(this.token.getLine(), "Reserved word: \"return", this.token.getLexema());
-            while(!scan.isModifiers(this.token.getLexema()) && !this.token.getCodigo().equals("IDE")
-                    && !this.token.getLexema().equals("-") && !this.token.getCodigo().equals("NRO")
-                    && !scan.isBooleans(this.token.getLexema()) && !scan.isUnaryOp(this.token.getLexema())
-                    && !this.token.getLexema().equals("!")){
-                if(!this.arq.hasNext()){
-                    break;
-                }
-                next();
-            }
         }
         
         if(token.getLexema().equals(";")){
             next();
-        } else {
-            setErro(this.token.getLine(),  "Delimitator: \";", this.token.getLexema());
-            panicState("}");
         }
     }
     
@@ -1783,40 +1270,21 @@ public class TokensReader {
             next();
             if(this.token.getLexema().equals(".")){
                 next();
-            } else {
-                setErro(this.token.getLine(), "Delimitator: \".", this.token.getLexema());
-                while(!this.token.getCodigo().equals("IDE")){
-                    if(!this.arq.hasNext()){
-                        break;
-                    }
-                    next();
-                }
             }
             
             if(this.token.getCodigo().equals("IDE")){
                 symbol.setId(this.token.getLexema());
                 symbol.setLine(this.token.getLine());
                 next();
-            } else {
-               setErro(this.token.getLine(), "Identifier", this.token.getLexema());
-               while(!scan.isOperators(this.token.getLexema()) && !this.token.getLexema().equals(";")
-                        && !this.token.getLexema().equals(")") && !this.token.getLexema().equals(".")
-                        && !this.token.getLexema().equals("[") && !this.token.getLexema().equals("]")
-                        && !this.token.getLexema().equals(")") && !scan.isUnaryOp(this.token.getLexema())){
-                    if(!this.arq.hasNext()){
-                        break;
-                    }
-                    next();
-                }
             }
             
             paths(symbol);
             
             if(symbol.getScope().equals("LOCAL")){
-                if(!this.tabela_local_varibles.contem(symbol)){
+                if(!this.tabela_local_variables.contem(symbol)){
                     setSemanticError("Variável " + symbol.getId()+ " na linha " + symbol.getLine() + " não foi declarada!");
                 } else {
-                    symbol.setType(this.tabela_local_varibles.findById(symbol).getType());
+                    symbol.setType(this.tabela_local_variables.findById(symbol).getType());
                     if(!this.isExpression){
                         this.type = symbol.getType();
                     }
@@ -1871,9 +1339,6 @@ public class TokensReader {
             if(this.token.getLexema().equals(".") || this.token.getLexema().equals("[")){
                 paths(symbol);
             }
-        } else {
-            setErro(this.token.getLine(), "Identifier", this.token.getLexema());
-            panicState("=");
         }
     }
     
@@ -1886,15 +1351,15 @@ public class TokensReader {
                 indice_var.setScope(_scope.LOCAL.toString());
                 indice_var.setLine(this.token.getLine());
                 
-                if(this.tabela_local_varibles.findById(indice_var) == null){
+                if(this.tabela_local_variables.findById(indice_var) == null){
                     indice_var.setScope(_scope.GLOBAL.toString());
                     if(this.tabela_variables.findById(indice_var) == null){
                         setSemanticError("Variável " + indice_var.getId()+ " na linha " + indice_var.getLine() + " não foi declarada!");
                     } else {
-                        indice_var = this.tabela_local_varibles.findById(indice_var);
+                        indice_var = this.tabela_local_variables.findById(indice_var);
                     }
                 } else {
-                    indice_var = this.tabela_local_varibles.findById(indice_var);
+                    indice_var = this.tabela_local_variables.findById(indice_var);
                 }
                 
                 if(!indice_var.getType().equals("int")){
@@ -1902,24 +1367,9 @@ public class TokensReader {
                 }
             }
             next();
-        } else {
-            setErro(this.token.getLine(), "Number, indetifier", this.token.getLexema());
-            panicState("]");
         }
         
         if(this.token.getLexema().equals("]")){
-            next();
-        } else {
-            setErro(this.token.getLine(), "Delimitator: \"]", this.token.getLexema());
-            panicState("=");
-        }
-    }
-    
-    private void panicState (String sinalizer) {
-        while(!this.token.getLexema().equals(sinalizer)){
-            if(!this.arq.hasNext()){
-                break;
-            }
             next();
         }
     }

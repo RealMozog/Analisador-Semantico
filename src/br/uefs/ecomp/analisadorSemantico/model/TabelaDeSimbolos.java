@@ -58,6 +58,16 @@ public class TabelaDeSimbolos {
         }
     }
     
+    public void removeSymbolsByScope(String scope){
+        for (List<Simbolo> lista: this.tabela){
+            lista.forEach(element -> {
+                if(element.getScope().equals(scope)){
+                    lista.remove(element);
+                }
+            });
+        }
+    }
+    
     public int tamanho() {
         return this.tamanho;
     }

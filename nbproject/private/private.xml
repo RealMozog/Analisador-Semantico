@@ -4,9 +4,9 @@
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
             <file>file:/C:/Users/sandr/Documents/Projects/Analisador-Semantico/src/br/uefs/ecomp/analisadorSemantico/model/TokensReader.java</file>
-            <file>file:/C:/Users/sandr/Documents/Projects/Analisador-Semantico/src/br/uefs/ecomp/analisadorSemantico/model/AnaliseSintatica.java</file>
             <file>file:/C:/Users/sandr/Documents/Projects/Analisador-Semantico/src/br/uefs/ecomp/analisadorSemantico/model/AnaliseLexica.java</file>
             <file>file:/C:/Users/sandr/Documents/Projects/Analisador-Semantico/src/br/uefs/ecomp/analisadorSemantico/view/AnalisadorSemantico.java</file>
+            <file>file:/C:/Users/sandr/Documents/Projects/Analisador-Semantico/src/br/uefs/ecomp/analisadorSemantico/model/AnaliseSintatica.java</file>
             <file>file:/C:/Users/sandr/Documents/Projects/Analisador-Semantico/src/br/uefs/ecomp/analisadorSemantico/controller/AnalisadorSemanticoController.java</file>
         </group>
     </open-files>
