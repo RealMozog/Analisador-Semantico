@@ -1,0 +1,2 @@
+Variavel pessoa na linha 31 não declarada!
+Programa não contém o procedimento start()

@@ -1,0 +1,3 @@
+Error: line= 19; Expected=Delimitator: "}", Found="pessoa"
+Error: line= 19; Expected=Attribuition Operator: "=", Found="obj"
+Error: line= 19; Expected=Delimitator:"}", Found="obj"

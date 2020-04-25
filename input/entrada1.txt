@@ -1,76 +1,49 @@
-const {
-    int a = 4;
-    boolean aux1 = true;
-    real numeroAux = 4.478;
-    string auxString = "Testando";
-} 
-var {
-    int auxNum[2][10], testeNum, next;
-    string auxString;
-typedef struct j {
-	var{
-
-}
-}
-struct istruct extends j {
-	var {
-	int varia;
-}
-}
-struct inteiro {
-	var {
-	int varia;
-}
-}
-}
-
-function int starti (){
-    var {
-        int numLocal[5];
-        real numAux;
-	boolean a;
-    }
-    numLocal = "string";
-	aux1 = 12;
-	testeNum = true;
-    numAux = 1.1;
-    while (numLocal < 3) {
-        a = mudaNum(3);
-    }
-
-    aumentaNum(a);
-    return 0;
-}
-
-function inteiro mudaNum (int a){
-    var {
-struct inteiro extends j {
-	var {
-	int varia;
-}
-}
-}    
-    if ((a == c && a <= d)) then {
-            a++;
-        } else {
-            if (a < 5) then {
-                b = a.besta * 3;
-            } else {
-                    if (a < 10) then {
-                    a = a + 3;
-                    }
-            }
-        }
-        return a;
-}
-
-fuction int start (){
-	var {
+const { 
+	int max1 = 10, max2 = 20;  
 		
+	string msg1 = "mensagem teste";   
+		
+	boolean flag1 = true;
+	
+	real max2 = 200.0;  // erro01: constante duplicada
+
+	int msg1 = 1;       // erro02: constante duplicada
+}
+
+var { 
+	int max3, max4;  
+		
+	string msg2;
+		
+	boolean flag2;
+	
+	real max4;      // erro03: variavel duplicada
+
+	int msg2;       // erro04: variavel duplicada
+	
+	struct pessoa {
+		var {
+			string nome;
+			string cpf;
+			int idade;		
+			string rua;
+			int nro;
+			string cep;
+			string cidade;
+			string estado;
+		}		
+	}
+			
+	struct aluno extends pessoa {
+		var {
+			string nome;	// erro05: variavel duplicada
+			string matricula;
+			string disciplinas;
+			real notas;
+		}
 	}
 }
 
-procedure addNum(real a){
-    var {}   
-    a = a + 20;
+procedure start ( ) { 
+	var { }
 }

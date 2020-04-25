@@ -28,8 +28,9 @@ public class AnaliseSintatica {
         Iterator<Object> s;
         String output = "";
         int count = 1;
-        
+           
         for (List<Token> arq: al.getArqs()){
+            
             it = arq.iterator();
             controller.analiseArq(it);
             e = controller.iteratorErrors();
@@ -57,6 +58,7 @@ public class AnaliseSintatica {
             }
             
             write_output(output, count, true);
+            output = "";
 
             count++;
         }
@@ -64,6 +66,8 @@ public class AnaliseSintatica {
     
     private void write_output(String erros, int count, boolean isSemantic) throws IOException{
         String caminho;
+        
+        System.out.print("out??");
         
         if(isSemantic){
             caminho = "output\\saida";

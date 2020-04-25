@@ -1,0 +1,44 @@
+const {
+	int max1 = 10; 
+	
+	string msg1 = "mensagem teste";  
+	
+	boolean flag1 = true;
+}
+
+var { 
+	int max2;  
+		
+	string msg2;
+		
+	boolean flag2;
+	
+	struct pessoa {
+		var {
+			string nome;
+			string cpf;
+			int idade;		
+			string rua;
+		}		
+	}
+}
+
+procedure pessoa (real x, int j) {
+	var {
+		string nome, endereco;
+		int idade;
+		real salario, despesa;	
+		pessoa obj;		
+	}	
+
+	local.idade = global.max3;   // erro01: id "max3" nao declarado
+
+	local.valor = global.max1;   // erro02: id "valor" nao declarado
+	
+	local.obj.estado = "Bahia";  // erro03: id "estado" nao declarado
+
+}
+
+procedure start ( ) {
+	var { }
+}

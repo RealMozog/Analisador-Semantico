@@ -1,0 +1,3 @@
+Função ou procedimento teste na linha 16 já declarada!
+Função ou procedimento soma na linha 38 já declarada!
+Função ou procedimento start na linha 44 já declarada!

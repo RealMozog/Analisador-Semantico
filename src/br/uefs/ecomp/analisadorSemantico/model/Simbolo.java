@@ -55,7 +55,7 @@ public class Simbolo {
         public String toString() {
             return "Param{" + "type=" + type + ", id=" + id + '}';
         }
-        
+
         @Override
         public boolean equals(Object obj) {
             if (obj == null) {
@@ -68,20 +68,14 @@ public class Simbolo {
             if (!Objects.equals(this.type, other.type)) {
                 return false;
             }
-            if(this.type != null){
-                if(other.type != null){
-                    if (!Objects.equals(this.id, other.id)) {
-                        return false;
-                    }
-                }
-            }
-            
             return true;
         }
-
+        
+        
         @Override
         public int hashCode() {
             int hash = 3;
+            hash = 47 * hash + Objects.hashCode(this.type);
             return hash;
         }
     }
