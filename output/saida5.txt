@@ -1,1 +1,3 @@
-Nenhum erro semântico encontrado no arquivo de entrada5
+Proibido atribuir valor a constante max1 na linha 14
+Proibido atribuir valor a constante msg na linha 16
+Proibido atribuir valor a constante salario na linha 18

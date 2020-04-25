@@ -74,21 +74,15 @@ public class TokensReader {
     }
     
     private void checkFunctionsCalls(){
+        Simbolo findFunction;
+        
         for (Simbolo call : this.tabela_call_functions.pegaTodos()){
-            Object[] call_param = call.getParameters().toArray();
-            Simbolo findFunction = this.tabela_functions.findById(call);
-            
-            if(findFunction != null){
-                Object[] p = findFunction.getParameters().toArray();
-                for(int i = 0; i < p.length; i++){
-                    Param param = (Simbolo.Param) p[i];
-                    Param c_param = (Simbolo.Param) call_param[i];
-                    
-                    if(!param.getType().equals(c_param.getType())){
-                        setSemanticError("Função ou procedimento " + call.getId() + " chamada na linha "
-                            + call.getLine() + " não existe!");
-                    }
-                }
+            findFunction = this.tabela_functions.findById(call);
+
+            if(findFunction == null){
+                setSemanticError("Função ou procedimento " + call.getId() + " chamada na linha "
+                            + call.getLine() + " não existe ou seus paramêtros são incompatíveis com a assinatura"
+                        + " da função ou procedimento!");
             }
         }
     }
@@ -1012,6 +1006,13 @@ public class TokensReader {
     }
     
     private void assing(Simbolo symbol){
+
+        if(symbol.getScope().equals("GLOBAL")){
+            if(this.tabela_constants.findById(symbol) != null){
+                setSemanticError("Proibido atribuir valor a constante " 
+                                + symbol.getId() + " na linha " +  symbol.getLine());
+            }
+        }
         
         if(scan.isModifiers(this.token.getLexema()) || this.token.getLexema().equals("-") 
                 || this.token.getCodigo().equals("NRO") || scan.isBooleans(this.token.getLexema())
@@ -1421,6 +1422,7 @@ public class TokensReader {
     }
     
     private void call_procedure_function(Simbolo symbol){
+        symbol.setScope(_scope.GLOBAL.toString());
         
         if(this.token.getLexema().equals("(")){
             next();

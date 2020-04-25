@@ -82,7 +82,6 @@ public class TabelaDeSimbolos {
     
     public Simbolo findById(Simbolo Id){
         int indice = this.calculaIndiceDaTabela(Id);
-        // System.out.print("\n"+ indice + "\n" + Id.toString());
         List<Simbolo> lista = this.tabela.get(indice);
         
         for(Simbolo item: lista){

@@ -1,1 +1,4 @@
-Nenhum erro semântico encontrado no arquivo de entrada6
+Função ou procedimento calcula_aumento chamada na linha 38 não existe ou seus paramêtros são incompatíveis com a assinatura da função ou procedimento!
+Função ou procedimento calcula_aumento_bolsa chamada na linha 36 não existe ou seus paramêtros são incompatíveis com a assinatura da função ou procedimento!
+Função ou procedimento calcula_aumento_bolsa chamada na linha 34 não existe ou seus paramêtros são incompatíveis com a assinatura da função ou procedimento!
+Função ou procedimento imprimir chamada na linha 15 não existe ou seus paramêtros são incompatíveis com a assinatura da função ou procedimento!
