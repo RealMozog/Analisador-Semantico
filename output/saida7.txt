@@ -1,1 +1,1 @@
-Variavel pessoa na linha 19 não declarada!
+Variável idade na linha 25 não foi declarada!

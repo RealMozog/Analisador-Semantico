@@ -1,4 +1,1 @@
-Error: line= 12; Expected=Reserved word: "return", Found="local"
-Error: line= 12; Expected=Delimitator: ";", Found="local"
-Error: line= 20; Expected=Reserved word: "return", Found="global"
-Error: line= 20; Expected=Delimitator: ";", Found="global"
+Nenhum erro sintático encontrado no arquivo de entrada6

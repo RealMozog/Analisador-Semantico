@@ -343,10 +343,11 @@ public class TokensReader {
     private void var_values_declaration(String scope, Simbolo symbol){
         symbol.setCategory(category.VARIABLE.toString());
 
-        if(scan.isType(this.token.getLexema())){
+        if(scan.isType(this.token.getLexema()) || this.token.getCodigo().equals("IDE")){
             symbol.setType(this.token.getLexema());
             next();
             var_values_atribuition(symbol);
+            
             
             Simbolo s_more_var = new Simbolo();
             s_more_var.setScope(scope);
@@ -524,7 +525,7 @@ public class TokensReader {
             symbol.setId(this.token.getLexema());
             symbol.setLine(this.token.getLine());
             next();
-        }  else {
+        } else {
             setErro(this.token.getLine(), "Identifier", this.token.getLexema());
             while(!scan.isType(this.token.getLexema()) && !this.token.getCodigo().equals("IDE")
                     && !this.token.getLexema().equals("typedef") && !this.token.getLexema().equals("struct")
@@ -840,7 +841,7 @@ public class TokensReader {
         Simbolo symbol = new Simbolo();
         symbol.setScope(scope);
         var_values_declaration(scope, symbol);
-        
+
         if(this.token.getLexema().equals("}")){
             next();
         } else {
@@ -891,6 +892,43 @@ public class TokensReader {
                     next();
                 }
             }
+        }
+        
+        if(scan.isModifiers(this.token.getLexema())){
+            Simbolo symbol = new Simbolo();
+            call_variable(symbol);
+            
+            if(scan.isUnaryOp(this.token.getLexema())){
+                next();
+                if(this.token.getLexema().equals(";")){
+                    next();
+                } else {
+                    setErro(this.token.getLine(), "Delimitator: \";", this.token.getLexema());
+                    while(!scan.isCommands(this.token.getLexema()) && !this.token.getCodigo().equals("IDE")
+                            && !this.token.getLexema().equals("return") && !this.token.getLexema().equals("}")
+                            && !scan.isModifiers(this.token.getLexema())){
+                        if(!this.arq.hasNext()){
+                            break;
+                        }
+                        next();
+                    }
+                }
+            } else {
+                if(this.token.getLexema().equals("=")){
+                    next();
+                    assing(symbol);
+                } else {
+                    setErro(this.token.getLine(), "Attribuition Operator: \"=", this.token.getLexema());
+                    while(!this.token.getCodigo().equals("NRO") && !scan.isModifiers(this.token.getLexema())
+                            && this.token.getCodigo().equals("IDE") && !this.token.getLexema().equals("-")
+                            && this.token.getCodigo().equals("CDC")){
+                        if(!this.arq.hasNext()){
+                            break;
+                        }
+                        next();
+                    }
+                }
+            } 
         }
         
         if(this.token.getCodigo().equals("IDE")){
@@ -1084,7 +1122,7 @@ public class TokensReader {
             if(this.token.getLexema().equals("(")){
                 symbol.setCategory(category.FUNCTION.toString());
                 symbol.setScope(_scope.GLOBAL.toString());
-                    call_procedure_function(symbol);
+                call_procedure_function(symbol);
             } else {
                 if(this.tabela_local_variables.contem(symbol)){
                     symbol.setType(this.tabela_local_variables.findById(symbol).getType());

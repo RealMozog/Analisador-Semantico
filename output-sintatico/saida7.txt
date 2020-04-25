@@ -1,3 +1,2 @@
-Error: line= 19; Expected=Delimitator: "}", Found="pessoa"
-Error: line= 19; Expected=Attribuition Operator: "=", Found="obj"
-Error: line= 19; Expected=Delimitator:"}", Found="obj"
+Error: line= 27; Expected=Attribuition Operator: "=", Found="["
+Error: line= 27; Expected=Delimitator:"}", Found="["

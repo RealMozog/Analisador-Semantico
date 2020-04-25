@@ -67,8 +67,6 @@ public class AnaliseSintatica {
     private void write_output(String erros, int count, boolean isSemantic) throws IOException{
         String caminho;
         
-        System.out.print("out??");
-        
         if(isSemantic){
             caminho = "output\\saida";
         } else {
