@@ -1905,14 +1905,18 @@ public class TokensReader {
         if(this.token.getLexema().equals(".")){
             next();
             struct(symbol);
+            paths(symbol);
         }
         
         if(this.token.getLexema().equals("[")){
             next();
             symbol.setArray_dimensions();
             matriz();
+            paths(symbol);
         }
+        
     }
+    
     
     private void struct(Simbolo symbol){
         

@@ -1,2 +1,1 @@
-Error: line= 27; Expected=Attribuition Operator: "=", Found="["
-Error: line= 27; Expected=Delimitator:"}", Found="["
+Nenhum erro sintático encontrado no arquivo de entrada7

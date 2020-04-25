@@ -95,7 +95,7 @@
 <28: IDE, resultado>
 <28: DEL, ;>
 <29: PRE, int>
-<29: IDE, uantidade>
+<29: IDE, quantidade>
 <29: DEL, ;>
 <30: DEL, }>
 <32: PRE, local>
@@ -132,7 +132,7 @@
 <36: DEL, (>
 <36: PRE, local>
 <36: DEL, .>
-<36: IDE, uantidade>
+<36: IDE, quantidade>
 <36: DEL, ,>
 <36: PRE, local>
 <36: DEL, .>
@@ -155,7 +155,3 @@
 <38: DEL, )>
 <38: DEL, ;>
 <39: DEL, }>
-
-
-<29: CIN, q>
-<36: CIN, q>

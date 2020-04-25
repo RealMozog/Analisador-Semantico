@@ -1,1 +1,2 @@
-Variável idade na linha 25 não foi declarada!
+Valor inválido para atribuição de variável ou retorno função de tipo real na linha 20
+Valor inválido para atribuição de variável ou retorno função de tipo string na linha 22
