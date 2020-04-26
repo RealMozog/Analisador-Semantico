@@ -1,4 +1,4 @@
-Valor inválido para atribuição de variável de tipo real na linha 12
+Valor inválido para atribuição da variável result de tipo real na linha 12
 Proibido atribuir valor a constante b na linha 20
-Valor inválido para atribuição de variável de tipo real na linha 20
-Valor inválido para retorno de função de tipo string na linha 22
+Valor inválido para atribuição da variável b de tipo real na linha 20
+Valor inválido para retorno da função imprimir de tipo string na linha 22

@@ -193,6 +193,10 @@ public class TokensReader {
 
                     function_procedure(procedure);
                     
+                    for (Simbolo s : this.tabela_local_variables.pegaTodos()){
+                       // System.out.print(s.toString() + "\n");
+                    }
+                    
                     this.tabela_local_variables.removeAll();
                     this.tabela_structs.removeSymbolsByScope("LOCAL");
 
@@ -377,6 +381,9 @@ public class TokensReader {
             
             Simbolo s_var = new Simbolo();
             s_var.setScope(scope);
+            if(s_more_var.getStruct_id() != null){
+                s_var.setStruct_id(s_more_var.getStruct_id());
+            } 
             var_values_declaration(scope, s_var);
         }
         
@@ -1152,7 +1159,9 @@ public class TokensReader {
                 defineExpTypeResult("return");
                 call_procedure_function(symbol);
             } else {
-                if(this.tabela_local_variables.contem(symbol)){
+                paths(symbol);
+                
+                if(this.tabela_local_variables.contem(symbol) && symbol.getStruct_id() == null){
                     symbol.setType(this.tabela_local_variables.findById(symbol).getType());
                     if(!isParams){
                         defineExpTypeResult(symbol.getType());
@@ -1174,20 +1183,10 @@ public class TokensReader {
                                     defineExpTypeResult(symbol.getType());
                                 }
                             }
-                    } else {
-                        if(!this.tabela_variables.contem(symbol)){
-                            setSemanticError("Variavel, constante ou atributo de struct " 
-                                    + symbol.getId()+ " na linha " + symbol.getLine() + " não foi declarada!");
-                        } else {
-                            symbol.setType(this.tabela_variables.findById(symbol).getType());
-                            if(!isParams){
-                                defineExpTypeResult(symbol.getType());
-                            }
-                        }
                     }
                 }
             }
-            paths(symbol);
+            
         }
     }
     
@@ -1289,9 +1288,10 @@ public class TokensReader {
         }
         
         if(symbol.getType() != null){
-            String text = isReturn? "retorno de função ": "atribuição de variável ";
+            String text = isReturn? "retorno da função ": "atribuição da variável ";
             if(!symbol.getType().equals(this.type) && !this.type.equals("return")){
-                setSemanticError("Valor inválido para " + text + "de tipo " + symbol.getType() + " na linha " + line);
+                setSemanticError("Valor inválido para " + text + symbol.getId() + " de tipo " 
+                        + symbol.getType() + " na linha " + line);
             }
         }
     }
@@ -1895,7 +1895,9 @@ public class TokensReader {
             
             paths(symbol);
             
-            if(symbol.getScope().equals("LOCAL")){
+            
+            
+            if(symbol.getScope().equals("LOCAL") && symbol.getStruct_id() == null){
                 if(!this.tabela_local_variables.contem(symbol)){
                     setSemanticError("Variável " + symbol.getId()+ " na linha " + symbol.getLine() + " não foi declarada!");
                 } else {
@@ -1906,7 +1908,7 @@ public class TokensReader {
                 }
             }
             
-            if(symbol.getScope().equals("GLOBAL")){
+            if(symbol.getScope().equals("GLOBAL") && symbol.getStruct_id() == null){
                 if(symbol.getStruct_id() == null){
                     if(!this.tabela_constants.contem(symbol)){
                         setSemanticError("Constante " + symbol.getId()+ " na linha " + symbol.getLine() + " não foi declarada!");
@@ -1949,10 +1951,40 @@ public class TokensReader {
     
     
     private void struct(Simbolo symbol){
+        Simbolo findStruct = new Simbolo();
         
         if(this.token.getCodigo().equals("IDE")){
             symbol.setStruct_id(symbol.getId());
             symbol.setId(this.token.getLexema());
+            
+            findStruct.setId(symbol.getStruct_id());
+            findStruct.setScope(_scope.LOCAL.toString());
+            Simbolo struct = this.tabela_local_variables.findById(findStruct);
+            
+            if(struct != null){
+                findStruct.setId(symbol.getId());
+                findStruct.setStruct_id(struct.getType());
+                findStruct.setScope(_scope.LOCAL.toString());
+                
+                Simbolo varStruct = this.tabela_local_variables.findById(findStruct);
+                if(varStruct == null){
+                    findStruct.setScope(_scope.GLOBAL.toString());
+                    varStruct = this.tabela_variables.findById(findStruct);
+                    if(varStruct != null){
+                        System.out.print(varStruct.toString() + "\n");
+                        symbol.setType(varStruct.getType());
+                    } else {
+                        setSemanticError("Atributo " + symbol.getId() + " da variável " + symbol.getStruct_id() +
+                             " do tipo composto " + struct.getType() +
+                             " na linha " + symbol.getLine() + " não foi declarada!");
+                    }
+                } else {
+                    symbol.setType(varStruct.getType());
+                }
+            } else {
+                setSemanticError("Variável de tipo composto " + symbol.getStruct_id()+ " na linha " + symbol.getLine() + " não foi declarada!");
+            }
+            
             next();
             
             if(this.token.getLexema().equals(".") || this.token.getLexema().equals("[")){
