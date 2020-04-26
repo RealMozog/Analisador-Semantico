@@ -1,4 +1,4 @@
 Constante max3 na linha 34 não foi declarada!
-Valor inválido para atribuição de variável ou retorno função de tipo int na linha 34
+Valor inválido para atribuição de variável de tipo int na linha 34
 Variável valor na linha 36 não foi declarada!
 Variável estado na linha 38 não foi declarada!

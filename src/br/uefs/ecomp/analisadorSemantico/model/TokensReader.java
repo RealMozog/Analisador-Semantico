@@ -1,7 +1,6 @@
 package br.uefs.ecomp.analisadorSemantico.model;
 
 import br.uefs.ecomp.AnalisadorLexico.model.Token;
-import br.uefs.ecomp.analisadorSemantico.model.Simbolo.Param;
 import java.util.Iterator;
 
 /**
@@ -22,6 +21,7 @@ public class TokensReader {
     TabelaDeSimbolos tabela_structs;
     TabelaDeSimbolos tabela_functions;
     TabelaDeSimbolos tabela_call_functions;
+    Simbolo varAssingType;
     ScanLexema scan;
     Token token;
     
@@ -50,6 +50,7 @@ public class TokensReader {
         this.tabela_structs = new TabelaDeSimbolos();
         this.tabela_functions = new TabelaDeSimbolos();
         this.tabela_call_functions = new TabelaDeSimbolos();
+        this.varAssingType = new Simbolo();
     }
 
     public ErrorList getSemanticErrors() {
@@ -83,6 +84,15 @@ public class TokensReader {
                 setSemanticError("Função ou procedimento " + call.getId() + " chamada na linha "
                             + call.getLine() + " não existe ou seus paramêtros são incompatíveis com a assinatura"
                         + " da função ou procedimento!");
+            } else {
+                if(call.getVarAssingType() != null){
+                    System.out.print(call.getVarAssingType().toString() + "\n");
+                    
+                   if(!findFunction.getType().equals(call.getVarAssingType().getType())){
+                       setSemanticError("Retorno da função " + findFunction.getId() + " incompatível com tipo " + 
+                               call.getVarAssingType().getType() + " da variável" + call.getVarAssingType().getId());
+                   }
+                }
             }
         }
     }
@@ -204,7 +214,6 @@ public class TokensReader {
         return this.erroList;
     }
 
-    
     private void global_values(String scope){
         Simbolo symbol = new Simbolo();
         symbol.setScope(scope);
@@ -890,7 +899,7 @@ public class TokensReader {
         
         if(scan.isModifiers(this.token.getLexema())){
             Simbolo symbol = new Simbolo();
-            call_variable(symbol);
+            call_variable(symbol, false);
             
             if(scan.isUnaryOp(this.token.getLexema())){
                 next();
@@ -1017,9 +1026,9 @@ public class TokensReader {
         if(scan.isModifiers(this.token.getLexema()) || this.token.getLexema().equals("-") 
                 || this.token.getCodigo().equals("NRO") || scan.isBooleans(this.token.getLexema())
                 || scan.isUnaryOp(this.token.getLexema()) || this.token.getLexema().equals("!")){
-            expression(symbol);
+            expression(symbol, false);
         } else if(this.token.getCodigo().equals("IDE")){
-                expression(symbol);
+                expression(symbol, false);
         } else if(this.token.getCodigo().equals("CDC")){
                 if(symbol.getType() != null){
                     if(!symbol.getType().equals("string")){
@@ -1057,11 +1066,10 @@ public class TokensReader {
         int line = this.token.getLine();
         
         if(scan.isUnaryOp(this.token.getLexema())){
-            this.type = "int";
             this.operation_type = "increment";
             next();
             if(scan.isModifiers(this.token.getLexema()) || this.token.getCodigo().equals("IDE")){
-                variable(variable);
+                variable(variable, false);
             } else {
                 setErro(this.token.getLine(), "Variable", this.token.getLexema());
                 while(!scan.isCommands(this.token.getLexema()) && !this.token.getCodigo().equals("IDE")
@@ -1080,7 +1088,7 @@ public class TokensReader {
                 this.operation_type = "negation";
                 next();
                 if(scan.isModifiers(this.token.getLexema()) || this.token.getCodigo().equals("IDE")){
-                    variable(variable);
+                    variable(variable, false);
                 } else {
                     setErro(this.token.getLine(), "Variable", this.token.getLexema());
                     while(!scan.isCommands(this.token.getLexema()) && !this.token.getCodigo().equals("IDE")
@@ -1095,9 +1103,8 @@ public class TokensReader {
                 }
         } else 
             if(scan.isModifiers(this.token.getLexema()) || this.token.getCodigo().equals("IDE")){
-                variable(variable);
+                variable(variable, false);
                 if(scan.isUnaryOp(this.token.getLexema())){
-                    this.type = "int";
                     this.operation_type = "increment";
                     next();
                 }
@@ -1107,10 +1114,28 @@ public class TokensReader {
         }
     }
     
-    private void variable(Simbolo symbol){
+    private void defineExpTypeResult(String type){
+        
+        if(this.type == null){
+            this.type = type;
+        } else {
+            if(type.equals("int")){
+                if(!this.type.equals("int")){
+                    this.type = "undefined";
+                }
+            }
+            if(type.equals("real")){
+                if(!this.type.equals("real")){
+                    this.type = "undefined";
+                }
+            }
+        }
+    }
+    
+    private void variable(Simbolo symbol, boolean isParams){
         
         if(scan.isModifiers(this.token.getLexema())){
-            call_variable(symbol);
+            call_variable(symbol, isParams);
         }
 
         if(this.token.getCodigo().equals("IDE")){
@@ -1123,23 +1148,31 @@ public class TokensReader {
             if(this.token.getLexema().equals("(")){
                 symbol.setCategory(category.FUNCTION.toString());
                 symbol.setScope(_scope.GLOBAL.toString());
+                symbol.setVarAssingType(this.varAssingType.getVarAssingType());
+                defineExpTypeResult("return");
                 call_procedure_function(symbol);
             } else {
                 if(this.tabela_local_variables.contem(symbol)){
                     symbol.setType(this.tabela_local_variables.findById(symbol).getType());
-                    //this.type = symbol.getType();
+                    if(!isParams){
+                        defineExpTypeResult(symbol.getType());
+                    }
                 } else {
                     if(symbol.getStruct_id() == null){
                         if(this.tabela_constants.contem(symbol)){
                             symbol.setType(this.tabela_constants.findById(symbol).getType());
-                            //this.type = symbol.getType();
+                            if(!isParams){
+                                defineExpTypeResult(symbol.getType());
+                            }
                         } else 
                             if(!this.tabela_variables.contem(symbol)){
                                 setSemanticError("Variavel, constante ou atributo de struct " 
                                         + symbol.getId()+ " na linha " + symbol.getLine() + " não foi declarada!");
                             } else {
                                 symbol.setType(this.tabela_variables.findById(symbol).getType());
-                                //this.type = symbol.getType();
+                                if(!isParams){
+                                    defineExpTypeResult(symbol.getType());
+                                }
                             }
                     } else {
                         if(!this.tabela_variables.contem(symbol)){
@@ -1147,7 +1180,9 @@ public class TokensReader {
                                     + symbol.getId()+ " na linha " + symbol.getLine() + " não foi declarada!");
                         } else {
                             symbol.setType(this.tabela_variables.findById(symbol).getType());
-                            //this.type = symbol.getType();
+                            if(!isParams){
+                                defineExpTypeResult(symbol.getType());
+                            }
                         }
                     }
                 }
@@ -1168,9 +1203,7 @@ public class TokensReader {
                     t = "real";
                 }
                 
-                if(!this.isExpression){
-                    this.type = t;
-                }
+                defineExpTypeResult(t);
                 
                 if(operation.equals("negation")){
                     setSemanticError("Erro operação invalida para tipo real/inteiro na linha " + line);
@@ -1194,9 +1227,7 @@ public class TokensReader {
                     t = "real";
                 }
                 
-                if(!this.isExpression){
-                    this.type = t;
-                }
+                defineExpTypeResult(t);
                 
                 if(operation.equals("negation")){
                     setSemanticError("Erro operação invalida para tipo real/inteiro na linha " + line);
@@ -1204,14 +1235,13 @@ public class TokensReader {
                 next();
         } else
             if(scan.isBooleans(token.getLexema())){
-                this.type = "boolean";
+                defineExpTypeResult("boolean");
                 if(operation.equals("increment")){
                     setSemanticError("Erro operação invalida para tipo booleano na linha " + line);
                 }
                 next();
         } else {
             setErro(this.token.getLine(), "number, boolean", this.token.getLexema());
-            
             while(!scan.isOperators(this.token.getLexema()) && !this.token.getLexema().equals(";")
                     && !this.token.getLexema().equals(")") && !this.token.getLexema().equals(".")
                     && !this.token.getLexema().equals("[") && !scan.isUnaryOp(this.token.getLexema())){
@@ -1224,19 +1254,25 @@ public class TokensReader {
     }
     
     private void commands_exp(){
-        this.type = "undefined";
+        this.type = null;
         this.isExpression = false;
         int line = this.token.getLine();
         
         logical_exp();        
+        
+        if(this.type == null){
+            this.type = "undefined";
+        }
         
         if(!this.type.equals("boolean")){
             setSemanticError("Tipo incompátivel para expressão em comandos if e while na linha " + line);
         }
     }
     
-    private void expression(Simbolo symbol) {
-        this.type = "undefined";
+    private void expression(Simbolo symbol, boolean isReturn) {
+        this.type = null;
+        this.varAssingType.getVarAssingType().setId(symbol.getId());
+        this.varAssingType.getVarAssingType().setType(symbol.getType());
         int line = this.token.getLine();
         this.isExpression = false;
         
@@ -1248,16 +1284,14 @@ public class TokensReader {
             }
         }
         
+        if(this.type == null){
+            this.type = "undefined";
+        }
+        
         if(symbol.getType() != null){
-            if(this.type.equals("int")){
-                if(symbol.getType().equals("boolean")){
-                    setSemanticError("Valor inválido para atribuição de variável ou retorno "
-                            + "função de tipo " + symbol.getType() + " na linha " + line);
-                }
-            } else 
-                if(!symbol.getType().equals(this.type)){
-                setSemanticError("Valor inválido para atribuição de variável ou retorno "
-                        + "função de tipo " + symbol.getType() + " na linha " + line);
+            String text = isReturn? "retorno de função ": "atribuição de variável ";
+            if(!symbol.getType().equals(this.type) && !this.type.equals("return")){
+                setSemanticError("Valor inválido para " + text + "de tipo " + symbol.getType() + " na linha " + line);
             }
         }
     }
@@ -1337,9 +1371,6 @@ public class TokensReader {
         
         if(scan.isTimesDiv(this.token.getLexema())){
             this.isExpression = true;
-            if(!this.type.equals("int") && !this.type.equals("real")){
-                this.type = "int";
-            }
             next();
             op_unary();
             op_times_div();
@@ -1350,9 +1381,6 @@ public class TokensReader {
         
         if(scan.isPlusMinus(this.token.getLexema())){
             this.isExpression = true;
-            if(!this.type.equals("int") && !this.type.equals("real")){
-                this.type = "int";
-            }
             next();
             operation();
             op_sum();
@@ -1461,7 +1489,7 @@ public class TokensReader {
                 || this.token.getLexema().equals("-") || this.token.getCodigo().equals("IDE")){
             if(scan.isModifiers(this.token.getLexema()) || this.token.getCodigo().equals("IDE")){
                 Simbolo param = new Simbolo();
-                variable(param);
+                variable(param, true);
                 symbol.addParam(param.getType(), param.getId());
             } else 
                 if(this.token.getLexema().equals("-")){
@@ -1567,9 +1595,9 @@ public class TokensReader {
             next();
         } else
             if(scan.isModifiers(this.token.getLexema()) || this.token.getCodigo().equals("IDE")){
-                variable(print_param);
+                variable(print_param, false);
         } else {
-            setErro(this.token.getLine(), "Varible, string", this.token.getLexema());
+            setErro(this.token.getLine(), "Variable, string", this.token.getLexema());
             panicState(")");
         }
     }
@@ -1623,7 +1651,7 @@ public class TokensReader {
         Simbolo read_param = new Simbolo();
         
         if(scan.isModifiers(this.token.getLexema()) || this.token.getCodigo().equals("IDE")){
-            variable(read_param);
+            variable(read_param, false);
             more_read_params();
         }
     }
@@ -1804,7 +1832,7 @@ public class TokensReader {
                 }
                 next();
             } else {
-                expression(symbol);
+                expression(symbol, true);
             }
         } else {
             setErro(this.token.getLine(), "Reserved word: \"return", this.token.getLexema());
@@ -1827,7 +1855,7 @@ public class TokensReader {
         }
     }
     
-    private void call_variable (Simbolo symbol){
+    private void call_variable (Simbolo symbol, boolean isParams){
         symbol.setScope(_scope.LOCAL.toString());
         symbol.setCategory(category.VARIABLE.toString());
         
@@ -1872,8 +1900,8 @@ public class TokensReader {
                     setSemanticError("Variável " + symbol.getId()+ " na linha " + symbol.getLine() + " não foi declarada!");
                 } else {
                     symbol.setType(this.tabela_local_variables.findById(symbol).getType());
-                    if(!this.isExpression){
-                        this.type = symbol.getType();
+                    if(!isParams){
+                        defineExpTypeResult(symbol.getType());
                     }
                 }
             }
@@ -1884,8 +1912,8 @@ public class TokensReader {
                         setSemanticError("Constante " + symbol.getId()+ " na linha " + symbol.getLine() + " não foi declarada!");
                     } else {
                         symbol.setType(this.tabela_constants.findById(symbol).getType());
-                        if(!this.isExpression){
-                            this.type = symbol.getType();
+                        if(!isParams){
+                            defineExpTypeResult(symbol.getType());
                         }
                     }
                 } else {
@@ -1893,8 +1921,8 @@ public class TokensReader {
                         setSemanticError("Variável " + symbol.getId()+ " na linha " + symbol.getLine() + " não foi declarada!");
                     } else {
                         symbol.setType(this.tabela_variables.findById(symbol).getType());
-                        if(!this.isExpression){
-                            this.type = symbol.getType();
+                        if(!isParams){
+                            defineExpTypeResult(symbol.getType());
                         }
                     }
                 }

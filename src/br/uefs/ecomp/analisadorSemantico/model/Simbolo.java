@@ -24,6 +24,7 @@ public class Simbolo {
     private String struct_id;
     private boolean read;
     private String value;
+    private Param varAssingType = new Param(null, null);
     final private ArrayList<Param> parameters;
     
     protected class Param {
@@ -110,6 +111,18 @@ public class Simbolo {
 
     public int getArray_dimensions() {
         return array_dimensions;
+    }
+
+    public void setVarAssingType(Param varAssingType) {
+        this.varAssingType = varAssingType;
+    }
+
+    public Param getVarAssingType() {
+        return varAssingType;
+    }
+
+    public void setArray_dimensions(int array_dimensions) {
+        this.array_dimensions = array_dimensions;
     }
 
     public void setArray_dimensions() {

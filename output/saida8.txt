@@ -1,3 +1,4 @@
 Variável idade na linha 25 não foi declarada!
 Variável cpf na linha 27 não foi declarada!
-Valor inválido para atribuição de variável ou retorno função de tipo int na linha 27
+Valor inválido para atribuição de variável de tipo int na linha 27
+Valor inválido para atribuição de variável de tipo string na linha 31
