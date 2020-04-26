@@ -86,8 +86,6 @@ public class TokensReader {
                         + " da função ou procedimento!");
             } else {
                 if(call.getVarAssingType() != null){
-                    System.out.print(call.getVarAssingType().toString() + "\n");
-                    
                    if(!findFunction.getType().equals(call.getVarAssingType().getType())){
                        setSemanticError("Retorno da função " + findFunction.getId() + " incompatível com tipo " + 
                                call.getVarAssingType().getType() + " da variável" + call.getVarAssingType().getId());
@@ -192,10 +190,6 @@ public class TokensReader {
                     }
 
                     function_procedure(procedure);
-                    
-                    for (Simbolo s : this.tabela_local_variables.pegaTodos()){
-                       // System.out.print(s.toString() + "\n");
-                    }
                     
                     this.tabela_local_variables.removeAll();
                     this.tabela_structs.removeSymbolsByScope("LOCAL");
@@ -1971,7 +1965,6 @@ public class TokensReader {
                     findStruct.setScope(_scope.GLOBAL.toString());
                     varStruct = this.tabela_variables.findById(findStruct);
                     if(varStruct != null){
-                        System.out.print(varStruct.toString() + "\n");
                         symbol.setType(varStruct.getType());
                     } else {
                         setSemanticError("Atributo " + symbol.getId() + " da variável " + symbol.getStruct_id() +

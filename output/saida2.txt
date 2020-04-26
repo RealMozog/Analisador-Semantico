@@ -1,3 +1,0 @@
-Variavel max4 na linha 12 já declarada!
-Variavel msg2 na linha 14 já declarada!
-Variavel flag na linha 16 já declarada!

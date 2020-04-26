@@ -1,3 +1,0 @@
-Valor inválido para atribuição da variável idade de tipo int na linha 25
-Valor inválido para atribuição da variável matriz1 de tipo int na linha 27
-Valor inválido para atribuição da variável msg de tipo string na linha 31

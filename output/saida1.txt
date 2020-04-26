@@ -1,4 +1,0 @@
-Constante max2 na linha 8 já declarada!
-Constante msg1 na linha 10 já declarada!
-Variavel max4 na linha 20 já declarada!
-Variavel msg2 na linha 22 já declarada!
